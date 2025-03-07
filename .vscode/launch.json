@@ -1,0 +1,30 @@
+{
+    "configurations": [
+      {
+        "type": "debugpy",
+        "request": "launch",
+        "name": "Launch Backend",
+        "program": "${workspaceFolder}/backend/app.py",
+        "env": {
+          "FLASK_ENV": "development"
+        },
+        "args": [
+          "run",
+          "--host=0.0.0.0",
+          "--port=5000"
+        ]
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch Frontend",
+        "program": "${workspaceFolder}/frontend/src/index.js",
+        "preLaunchTask": "npm: start",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": [
+          "start"
+        ],
+        "port": 3000
+      }
+    ]
+  }

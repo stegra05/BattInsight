@@ -1,0 +1,12 @@
+{
+    "tasks": [
+      {
+        "type": "npm",
+        "script": "start",
+        "group": "build",
+        "problemMatcher": [],
+        "label": "npm: start",
+        "detail": "This task runs the npm start command."
+      }
+    ]
+  }
