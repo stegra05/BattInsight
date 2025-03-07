@@ -10,7 +10,6 @@ Abhängigkeiten:
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, DateTime
-from backend.database import Base
 
 Base = declarative_base()
 

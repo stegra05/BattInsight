@@ -16,7 +16,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 import os
-from backend import config
 from backend import models
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

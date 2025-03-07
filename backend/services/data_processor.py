@@ -9,7 +9,6 @@ Abhängigkeiten:
 """
 
 import pandas as pd
-import models
 
 
 def normalize_csv_data(file_path: str) -> pd.DataFrame:
