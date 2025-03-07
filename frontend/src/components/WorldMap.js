@@ -1,126 +1,100 @@
-import React, { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { getBatteryFailures } from '../api/API';
+import React, { useEffect, useRef } from 'react';
+import * as d3 from 'd3';
+import { feature } from 'topojson-client';
 
-/*
-Zweck: Zeigt die interaktive Weltkarte mit Leaflet.js.
-Funktionen:
-	•	Stellt eine Leaflet-Karte dar.
-	•	Zeigt Batterieausfälle pro Land farbkodiert an.
-	•	Aktualisiert sich basierend auf Nutzerfiltern.
-Abhängigkeiten:
-	•	Leaflet.js für Kartenvisualisierung.
-	•	API.js für Datenabruf.
-*/
+function WorldMap({ data, darkMode }) {
+  const svgRef = useRef(null);
+  const tooltipRef = useRef(null);
 
-const WorldMap = ({ filters }) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const mapRef = useRef(null);
-    const mapInstanceRef = useRef(null);
-    const markersLayerRef = useRef(null);
+  useEffect(() => {
+    const fetchAndRenderMap = async () => {
+      // Fetch world topology data
+      const topology = await fetch('https://unpkg.com/world-atlas@2/countries-110m.json')
+        .then(response => response.json());
+      
+      const countries = feature(topology, topology.objects.countries);
+      
+      // Setup dimensions
+      const width = 960;
+      const height = 500;
+      
+      // Create color scale for the gradient
+      const colorScale = d3.scaleSequential(d3.interpolateYlOrRd)
+        .domain([0, d3.max(data, d => d.failures) || 100]);
 
-    useEffect(() => {
-        // Only initialize if map doesn't exist
-        if (!mapInstanceRef.current && mapRef.current) {
-            mapInstanceRef.current = L.map(mapRef.current, {
-                center: [20, 0],
-                zoom: 2,
-                className: 'dark:invert' // Invert colors for dark mode
-            });
+      // Setup projection
+      const projection = d3.geoMercator()
+        .fitSize([width, height], countries);
+      
+      const path = d3.geoPath().projection(projection);
 
-            // Dark mode tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                className: 'dark:invert' // Invert map tiles in dark mode
-            }).addTo(mapInstanceRef.current);
+      // Clear existing SVG
+      d3.select(svgRef.current).selectAll("*").remove();
 
-            // Erstelle eine Layer-Gruppe für Marker
-            markersLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current);
-        }
+      // Create SVG
+      const svg = d3.select(svgRef.current)
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("class", "w-full h-full");
 
-        // Cleanup function
-        return () => {
-            if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove();
-                mapInstanceRef.current = null;
-            }
-        };
-    }, []); // Empty dependency array since we only want to initialize once
+      // Create tooltip
+      const tooltip = d3.select(tooltipRef.current);
 
-    // Aktualisiere die Marker, wenn sich die Filter ändern
-    useEffect(() => {
-        if (mapInstanceRef.current && filters) {
-            setIsLoading(true);
-            setError(null);
-            
-            getBatteryFailures(filters)
-                .then(data => {
-                    if (!data || data.length === 0) {
-                        console.log('No data received from API');
-                        return;
-                    }
+      // Draw map
+      svg.selectAll("path")
+        .data(countries.features)
+        .join("path")
+        .attr("d", path)
+        .attr("class", `${darkMode ? 'fill-gray-800' : 'fill-gray-200'} stroke-gray-400 transition-colors duration-200`)
+        .attr("fill", d => {
+          const countryData = data.find(item => item.country === d.properties.name);
+          return countryData ? colorScale(countryData.failures) : (darkMode ? '#374151' : '#e5e7eb');
+        })
+        .on("mouseover", (event, d) => {
+          const countryData = data.find(item => item.country === d.properties.name);
+          tooltip
+            .style("opacity", 1)
+            .html(`
+              <div class="bg-white dark:bg-gray-800 p-2 rounded shadow-lg">
+                <strong>${d.properties.name}</strong><br/>
+                ${countryData ? `Failures: ${countryData.failures}` : 'No data'}
+              </div>
+            `)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px");
+        })
+        .on("mouseout", () => {
+          tooltip.style("opacity", 0);
+        });
 
-                    // Entferne vorhandene Marker
-                    markersLayerRef.current.clearLayers();
+      // Add legend
+      const legendWidth = 200;
+      const legendHeight = 10;
 
-                    // Gehe davon aus, dass data ein Array von Objekten ist, z.B.:
-                    // { country, lat, lng, failures }
-                    data.forEach(item => {
-                        // Bestimme die Farbe basierend auf der Anzahl der Ausfälle
-                        let color = 'green';
-                        if (item.failures > 50) {
-                            color = 'red';
-                        } else if (item.failures > 20) {
-                            color = 'orange';
-                        }
+      const legendScale = d3.scaleLinear()
+        .domain(colorScale.domain())
+        .range([0, legendWidth]);
 
-                        // Erstelle einen Kreis-Marker
-                        const marker = L.circleMarker([item.lat, item.lng], {
-                            radius: 10,
-                            fillColor: color,
-                            color: color,
-                            weight: 1,
-                            opacity: 1,
-                            fillOpacity: 0.6
-                        });
+      const legendAxis = d3.axisBottom(legendScale)
+        .tickSize(legendHeight)
+        .tickFormat(d3.format("d"));
 
-                        // Binde ein Popup an den Marker
-                        marker.bindPopup(`<strong>${item.country}</strong><br/>Fehler: ${item.failures}`);
+      const legend = svg.append("g")
+        .attr("transform", `translate(${width - legendWidth - 20}, ${height - 30})`);
 
-                        // Füge den Marker der Layer-Gruppe hinzu
-                        markersLayerRef.current.addLayer(marker);
-                    });
-                })
-                .catch(error => {
-                    console.error('Failed to fetch data:', error);
-                    setError('Failed to load battery failure data');
-                })
-                .finally(() => {
-                    setIsLoading(false);
-                });
-        }
-    }, [filters]);
+      legend.append("g")
+        .call(legendAxis)
+        .attr("class", `${darkMode ? 'text-gray-300' : 'text-gray-700'}`);
+    };
 
-    return (
-        <div className="bg-dark-surface rounded-lg shadow-lg p-4 h-[80vh] relative">
-            {isLoading && (
-                <div className="absolute inset-0 bg-dark-background/50 flex items-center justify-center z-10">
-                    <div className="text-dark-text">Loading data...</div>
-                </div>
-            )}
-            {error && (
-                <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded">
-                    {error}
-                </div>
-            )}
-            <div 
-                ref={mapRef} 
-                className="h-full w-full rounded-lg overflow-hidden border border-dark-secondary"
-            />
-        </div>
-    );
-};
+    fetchAndRenderMap();
+  }, [data, darkMode]);
+
+  return (
+    <div className="relative w-full h-[70vh]">
+      <svg ref={svgRef} className="w-full h-full" />
+      <div ref={tooltipRef} className="absolute pointer-events-none opacity-0 z-10" />
+    </div>
+  );
+}
 
 export default WorldMap;

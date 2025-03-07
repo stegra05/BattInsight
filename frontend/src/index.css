@@ -4,21 +4,31 @@
 
 @layer base {
   body {
-    @apply bg-dark-background text-dark-text;
+    @apply bg-background-light dark:bg-background-dark text-gray-default dark:text-gray-light;
+  }
+  
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', system-ui, sans-serif;
   }
 }
 
-.leaflet-container {
-  width: 100%;
-  height: 100%;
-  background-color: #1a1a1a;
-}
+/* Remove Leaflet specific styles since we're using D3 now */
 
-/* Dark mode map styles */
-.dark .leaflet-tile {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-}
+@layer components {
+  .interactive-element {
+    @apply cursor-pointer select-none;
+    pointer-events: auto;
+  }
 
-.dark .leaflet-container {
-  background: #1a1a1a;
+  .select-container {
+    @apply relative z-10;
+  }
+
+  .select-option {
+    @apply hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer px-4 py-2;
+  }
 }

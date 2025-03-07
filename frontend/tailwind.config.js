@@ -20,25 +20,36 @@ module.exports = {
 	theme: {
 	  extend: {
 		colors: {
-		  // Eigene Farbpaletten für die Kartenvisualisierung
-		  'card-primary': '#1E3A8A', // Beispiel: dunkles Blau
-		  'card-secondary': '#F59E0B', // Beispiel: warmes Amber
-		  'primary': '#1a365d',
-		  'secondary': '#2563eb',
-		  'accent': '#60a5fa',
-		  'background': '#f8fafc',
-		  'text': '#1e293b',
-		  dark: {
-			primary: '#1E293B',
-			secondary: '#334155',
-			accent: '#3B82F6',
-			background: '#0F172A',
-			surface: '#1E293B',
-			text: '#F1F5F9'
+		  primary: '#2D7DD2',
+		  success: '#34C759',
+		  warning: '#FFCC00',
+		  danger: '#FF3B30',
+		  gray: {
+			light: '#F4F6F8',
+			default: '#6B778C',
 		  },
-		  light: {
-			// ...existing light colors...
+		  surface: {
+			light: '#ffffff',
+			dark: '#1a1a1a',
+		  },
+		  background: {
+			light: '#F4F6F8',
+			dark: '#111111',
 		  }
+		},
+		fontFamily: {
+		  sans: ['Inter', 'system-ui', 'sans-serif'],
+		  display: ['Montserrat', 'system-ui', 'sans-serif'],
+		},
+		fontSize: {
+		  'heading-1': ['32px', '1.2'],
+		  'heading-2': ['24px', '1.3'],
+		  'heading-3': ['20px', '1.4'],
+		  'body': ['16px', '1.5'],
+		},
+		boxShadow: {
+		  'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+		  'header': '0 2px 4px rgba(0, 0, 0, 0.05)',
 		},
 		screens: {
 		  // Breakpoints für responsive Designs
