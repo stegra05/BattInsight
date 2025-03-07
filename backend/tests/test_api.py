@@ -62,3 +62,23 @@ def test_get_battery_types_failure(client):
         assert response.status_code == 500
         assert 'error' in data
         assert 'Test Error' in data['error']
+
+
+def test_get_failure_modes_success(client):
+    with patch('routes.filter_routes.get_all_failure_modes') as mock_get_all_failure_modes:
+        mock_get_all_failure_modes.return_value = ['Overheating', 'Short Circuit']
+        response = client.get('/api/filter/failure-modes')
+        data = response.get_json()
+        assert response.status_code == 200
+        assert 'failure_modes' in data
+        assert data['failure_modes'] == ['Overheating', 'Short Circuit']
+
+
+def test_get_failure_modes_failure(client):
+    with patch('routes.filter_routes.get_all_failure_modes') as mock_get_all_failure_modes:
+        mock_get_all_failure_modes.side_effect = Exception('Test Error')
+        response = client.get('/api/filter/failure-modes')
+        data = response.get_json()
+        assert response.status_code == 500
+        assert 'error' in data
+        assert 'Test Error' in data['error']

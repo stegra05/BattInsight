@@ -32,6 +32,13 @@ def calculate_failure_rate_per_million(df: pd.DataFrame) -> pd.DataFrame:
     df['failure_rate_per_million_units'] = (df['failures'] / df['units']) * 1e6
     return df
 
+def calculate_average_failure_rate(df: pd.DataFrame) -> float:
+    """
+    Berechnet die durchschnittliche Fehlerquote.
+    """
+    if 'failure_rate_per_million_units' not in df.columns:
+        raise ValueError('Das DataFrame muss die Spalte "failure_rate_per_million_units" enthalten.')
+    return df['failure_rate_per_million_units'].mean()
 
 if __name__ == "__main__":
     import sys
@@ -43,7 +50,9 @@ if __name__ == "__main__":
     try:
         df = normalize_csv_data(file_path)
         df = calculate_failure_rate_per_million(df)
+        avg_failure_rate = calculate_average_failure_rate(df)
         print("Berechnete Kennzahlen:")
         print(df[['failures', 'units', 'failure_rate_per_million_units']])
+        print(f"Durchschnittliche Fehlerquote: {avg_failure_rate}")
     except Exception as e:
         print(f"Fehler bei der Datenverarbeitung: {e}")

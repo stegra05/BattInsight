@@ -22,3 +22,9 @@ def test_unknown_route(client):
     # Test that an unknown route returns a 404
     response = client.get('/nonexistent')
     assert response.status_code == 404
+
+def test_battery_status(client):
+    # Test the /battery-status endpoint returns the battery status
+    response = client.get('/battery-status')
+    assert response.status_code == 200
+    assert b"Battery status: OK" in response.data

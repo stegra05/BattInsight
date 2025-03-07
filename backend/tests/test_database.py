@@ -28,6 +28,7 @@ def db():
     db_instance.connect = MagicMock(return_value=True)
     db_instance.insert = MagicMock(return_value=42)
     db_instance.query = MagicMock(return_value=[{"id": 1, "data": "value"}])
+    db_instance.update = MagicMock(return_value=1)  # Mock update method
     db_instance.disconnect = MagicMock(return_value=True)
     return db_instance
 
@@ -51,6 +52,13 @@ def test_database_query(db):
     result = db.query("SELECT * FROM table")
     assert result == [{"id": 1, "data": "value"}]
     db.query.assert_called_once_with("SELECT * FROM table")
+
+
+def test_database_update(db):
+    """Testet das Aktualisieren von Daten in der Datenbank."""
+    result = db.update("UPDATE table SET data='new value' WHERE id=1")
+    assert result == 1
+    db.update.assert_called_once_with("UPDATE table SET data='new value' WHERE id=1")
 
 
 def test_database_disconnect(db):

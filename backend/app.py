@@ -20,7 +20,7 @@ CORS(app)
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG if os.environ.get('FLASK_ENV') == 'development' else logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -38,6 +38,10 @@ app.register_blueprint(filter_routes)
 @app.route('/')
 def index():
     return "Welcome to the Battery Failure Visualization API"
+
+@app.route('/health')
+def health_check():
+    return "OK", 200
 
 if __name__ == '__main__':
     # Get port from environment variable or use default
