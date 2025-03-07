@@ -8,11 +8,15 @@ Abhängigkeiten:
 	• models.py für Tabellenstrukturen.
 	• pandas zum Einlesen der CSV-Datei.
 """
-
 import pandas as pd
+import os
 from database import engine, SessionLocal
 import models
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+csv_path = os.path.join(script_dir, "..", "data", "world_kpi_anonym.csv")
+print(f"Script directory: {script_dir}")
+print(f"CSV path: {csv_path}")
 
 def init_db():
     # Erstelle alle Tabellen, falls diese noch nicht existieren
@@ -21,10 +25,35 @@ def init_db():
 
     # Lese die CSV-Datei
     try:
-        df = pd.read_csv("data/world_kpi_anonym.csv")
-        print("CSV-Datei data/world_kpi_anonym.csv wurde erfolgreich geladen.")
-    except FileNotFoundError:
-        print("Fehler: Die Datei data/world_kpi_anonym.csv wurde nicht gefunden.")
+        print(f"Attempting to read CSV from: {csv_path}")
+        print(f"File exists: {os.path.exists(csv_path)}")
+        print(f"Directory contents of {os.path.dirname(csv_path)}:")
+        try:
+            print(os.listdir(os.path.dirname(csv_path)))
+        except Exception as e:
+            print(f"Could not list directory: {e}")
+            
+        # Modified CSV reading with proper separator
+        df = pd.read_csv(
+            csv_path,
+            sep=';',           # Use semicolon as separator
+            encoding='utf-8',  # Keep explicit encoding
+        )
+        
+        # Clean column names if needed
+        df.columns = df.columns.str.strip()
+        
+        print("\nDataFrame Info:")
+        print(df.info())
+        print("\nColumns:")
+        print(df.columns.tolist())
+        print("\nFirst few rows:")
+        print(df.head())
+        
+        print(f"CSV-Datei {csv_path} wurde erfolgreich geladen.")
+    except FileNotFoundError as e:
+        print(f"Fehler: Die Datei {csv_path} wurde nicht gefunden.")
+        print(f"Error details: {str(e)}")
         return
     except Exception as e:
         print(f"Ein Fehler ist beim Laden der CSV-Datei aufgetreten: {e}")
