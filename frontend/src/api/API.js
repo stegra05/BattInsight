@@ -56,3 +56,13 @@ export const getFilters = async () => {
         throw error;
     }
 };
+
+export const getBatteryFailures = async (filters) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/batteryFailures`, filters);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching battery failures:', error);
+        throw error;
+    }
+};

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import API from '../api/API';
+import { getBatteryFailures } from '../api/API';
 
 /*
 Zweck: Zeigt die interaktive Weltkarte mit Leaflet.js.
@@ -37,7 +37,7 @@ const WorldMap = ({ filters }) => {
     // Aktualisiere die Marker, wenn sich die Filter ändern
     useEffect(() => {
         // Hole die Batterieausfälle basierend auf den aktuellen Filtern
-        API.getBatteryFailures(filters)
+        getBatteryFailures(filters)
             .then(data => {
                 // Entferne vorhandene Marker
                 markersLayerRef.current.clearLayers();

@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
-import WorldMap from './WorldMap';
+import WorldMap from './components/WorldMap';
 // Importiere API.js falls direkte Backend-Abfragen hier benötigt werden
 // import API from './API';
 
