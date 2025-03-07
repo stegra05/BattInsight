@@ -1,1 +1,6 @@
 # Liste aller Python-Abhängigkeiten für das Backend
+Flask==2.2.3
+Flask-Cors==3.0.10
+pandas==1.5.3
+gunicorn==20.1.0
+python-dotenv==0.21.0

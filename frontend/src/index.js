@@ -1,8 +1,10 @@
-/* 
-Zweck: Einstiegspunkt für die React-Anwendung.
-Funktionen:
-	•	Rendert die Haupt-App-Komponente.
-	•	Bindet React-Router ein.
-Abhängigkeiten:
-	•	App.js als Hauptkomponente.
-*/
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
