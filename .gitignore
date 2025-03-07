@@ -83,3 +83,4 @@ yarn-error.log*
 # Ignore compiled JavaScript or TypeScript files
 *.js.map
 *.ts.map
+frontend/.env
