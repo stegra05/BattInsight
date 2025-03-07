@@ -94,6 +94,34 @@ Dieses Projekt zielt darauf ab, eine interaktive Weltkarte zu erstellen, die die
 
 ---
 
+## Entwicklungsablauf
+
+Um das Projekt schrittweise zu implementieren, folge dieser Reihenfolge bei der Bearbeitung der Dateien:
+
+### **1. Backend einrichten**
+1. **`database.py`** – Erstelle die Verbindung zur Datenbank und definiere die Tabellenstruktur mit SQLAlchemy.
+2. **`models.py`** – Definiere die Datenmodelle für die Speicherung der Batterieausfalldaten.
+3. **`init_db.py`** – Implementiere die Logik zur Initialisierung der Datenbank, inkl. Import der CSV-Daten.
+4. **`data_processor.py`** – Verarbeite und bereinige die Daten aus der CSV-Datei für die Speicherung.
+5. **`data_routes.py`** – Entwickle API-Endpunkte zur Bereitstellung der aufbereiteten Daten.
+6. **`filter_routes.py`** – Implementiere Filterlogik, um Abfragen nach Ländern und Batterietypen zu ermöglichen.
+7. **`app.py`** – Setze das Flask-Backend auf, binde die Routen ein und starte den Server.
+
+### **2. Frontend entwickeln**
+1. **`apiClient.js`** – Implementiere Funktionen zum Abrufen der Daten von der API.
+2. **`Map.js`** – Entwickle die interaktive Karte mit Leaflet.js zur Visualisierung der Batterieausfälle.
+3. **`Filter.js`** – Erstelle eine UI-Komponente zur Auswahl von Filtern (Land, Batterietyp).
+4. **`Chart.js`** – Falls nötig, entwickle eine zusätzliche Diagramm-Komponente zur Datendarstellung.
+5. **`HomePage.js`** – Kombiniere die UI-Komponenten und stelle sie als Hauptansicht bereit.
+6. **`App.js`** – Integriere alle Komponenten in die Hauptstruktur der React-Anwendung.
+
+### **3. Deployment vorbereiten**
+1. **`Dockerfile`** – Erstelle ein Docker-Image für das Backend.
+2. **`docker-compose.yml`** – Konfiguriere das Backend und Frontend für den gemeinsamen Betrieb.
+3. **Deployment-Skripte** – Falls erforderlich, erstelle Skripte für Deployment auf Vercel, Netlify oder Render.
+
+---
+
 ## Installation & Nutzung
 
 ### Voraussetzungen
@@ -108,19 +136,19 @@ Dieses Projekt zielt darauf ab, eine interaktive Weltkarte zu erstellen, die die
    cd backend
    pip install -r requirements.txt
    python app.py
+   ```
 
-	2.	Frontend installieren
+2. **Frontend installieren**
+   ```sh
+   cd frontend
+   npm install
+   npm start
+   ```
 
-cd frontend
-npm install
-npm start
-
-
-	3.	Datenbank initialisieren
-
-python init_db.py
-
-
+3. **Datenbank initialisieren**
+   ```sh
+   python init_db.py
+   ```
 
 Die Anwendung ist dann unter http://localhost:3000 erreichbar.
 

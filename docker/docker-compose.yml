@@ -1,0 +1,4 @@
+# Zweck: Startet das Backend + Frontend mit Docker Compose.
+#	Abhängigkeiten:
+#  •	Dockerfile für Backend.
+#	 •	Node.js für Frontend.
