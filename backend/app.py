@@ -12,11 +12,19 @@ Abhängigkeiten:
 	•	config.py für Konfigurationseinstellungen.
 """
 
-from flask import Flask
+from flask import Flask, send_from_directory, send_file
+from flask_cors import CORS
 import config
+import os
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Initialisiere Flask-Anwendung
 app = Flask(__name__)
+CORS(app)
 
 # Lade Konfigurationswerte aus config.py
 app.config.from_object(config)
@@ -31,22 +39,40 @@ app.register_blueprint(filter_routes)
 # from database import init_db
 # init_db(app)
 
+# Update static directory configuration
+static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'build'))
+app.static_folder = static_dir
+app.static_url_path = ''
+
+@app.route('/static/<path:path>')
+def serve_static(path):
+    logger.debug(f"Serving static file: {path}")
+    return send_from_directory(os.path.join(static_dir, 'static'), path)
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    try:
+        logger.debug(f"Requested path: {path}")
+        # First try to serve as a static file
+        if path and os.path.exists(os.path.join(static_dir, path)):
+            logger.debug(f"Serving existing file: {path}")
+            return send_from_directory(static_dir, path)
+            
+        # For all other routes, serve index.html
+        logger.debug("Serving index.html")
+        return send_file(os.path.join(static_dir, 'index.html'))
+    except Exception as e:
+        logger.error(f"Error serving path {path}: {str(e)}")
+        return "Internal Server Error", 500
+
 if __name__ == '__main__':
-    import os  # Added to read environment variables
-    import socket  # Added for dynamic port selection
-
-    def get_free_port():
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(('', 0))
-        port = s.getsockname()[1]
-        s.close()
-        return port
-
-    # Use the PORT environment variable if available; otherwise, choose a free port dynamically
-    port = os.environ.get('PORT')
-    if port:
-        port = int(port)
+    port = 53557
+    logger.info(f"Starting server on port {port}")
+    logger.info(f"Static files will be served from: {static_dir}")
+    # Ensure the static directory exists
+    if not os.path.exists(static_dir):
+        logger.error(f"Static directory does not exist: {static_dir}")
     else:
-        port = get_free_port()
-    print(f"Starting server on port {port}")
+        logger.info("Static directory found")
     app.run(debug=True, host='0.0.0.0', port=port)

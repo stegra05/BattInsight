@@ -12,19 +12,25 @@ Abhängigkeiten:
 """
 
 from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
+import os
 import config
 import models
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'battery_failures.db')}"
+
 # Erstellen der Engine. Der Verbindungs-String wird aus config.py geladen.
-engine = create_engine(config.DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=True)
 
 # Migrationen ausführen: Erstellen aller Tabellen, falls sie noch nicht existieren.
 models.Base.metadata.create_all(bind=engine)
 
 # Konfigurieren des Session Makers
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
 @contextmanager
 def get_session():

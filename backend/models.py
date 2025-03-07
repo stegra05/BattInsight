@@ -9,7 +9,8 @@ Abhängigkeiten:
 """
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, DateTime
+from database import Base
 
 Base = declarative_base()
 
@@ -17,16 +18,23 @@ class BatteryFailure(Base):
     __tablename__ = 'battery_failures'
 
     id = Column(Integer, primary_key=True, index=True)
-    battAlias = Column(String)  # Changed from battery_alias
     country = Column(String)
-    continent = Column(String, nullable=True)
-    climate = Column(String, nullable=True)
-    iso_a3 = Column(String, nullable=True)
-    model_series = Column(String)
-    var = Column(String)
-    val = Column(Float)
-    descr = Column(String)
-    cnt_vhcl = Column(Integer)
+    lat = Column(Float)
+    lng = Column(Float)
+    failures = Column(Integer)
+    battery_type = Column(String)
+    failure_date = Column(DateTime)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "country": self.country,
+            "lat": self.lat,
+            "lng": self.lng,
+            "failures": self.failures,
+            "battery_type": self.battery_type,
+            "failure_date": self.failure_date.isoformat() if self.failure_date else None
+        }
 
     def __repr__(self):
         return f"<BatteryFailure(id={self.id}, country='{self.country}', model_series={self.model_series}, var='{self.var}', val={self.val})>"
