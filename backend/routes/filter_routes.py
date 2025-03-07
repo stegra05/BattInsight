@@ -1,0 +1,1 @@
+# API-Endpunkte zur Filterung der Daten nach Land/Batterietyps

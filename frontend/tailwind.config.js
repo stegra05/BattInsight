@@ -1,0 +1,1 @@
+// Konfigurationsdatei für Tailwind CSS 

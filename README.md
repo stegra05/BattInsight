@@ -1,3 +1,5 @@
+<!-- This file contains the project description, features, requirements, tech stack, roadmap, and installation instructions for the Battery Failure Visualization project. -->
+
 # Battery Failure Visualization
 
 ## Projektbeschreibung
@@ -127,7 +129,3 @@ Die Anwendung ist dann unter http://localhost:3000 erreichbar.
 Lizenz
 
 MIT License – Feel free to modify and distribute.
-
-Diese Version hat eine saubere Markdown-Struktur mit richtigen Abständen, Überschriften und Code-Blöcken für Befehle. Du kannst diese Datei direkt als `README.md` in dein Projektverzeichnis legen.
-
-Falls du noch Anpassungen brauchst, lass es mich wissen! 🚀

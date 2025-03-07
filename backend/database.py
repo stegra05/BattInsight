@@ -1,0 +1,1 @@
+# Initialisierung und Verbindung zur Datenbank

@@ -1,0 +1,1 @@
+# Konfigurationsdatei für das Backend (Datenbank-URL, API-Keys etc.)

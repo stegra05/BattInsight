@@ -1,0 +1,1 @@
+// Funktion zur Formatierung und Umwandlung der API-Daten

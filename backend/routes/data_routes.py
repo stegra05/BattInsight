@@ -1,0 +1,1 @@
+# API-Endpunkte zur Abfrage der Batterieausfall-Daten
