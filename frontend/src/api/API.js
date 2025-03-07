@@ -12,7 +12,7 @@ Abhängigkeiten:
 import axios from 'axios';
 
 // Basis-URL der API. Diese kann über die Umgebungsvariable REACT_APP_API_URL überschrieben werden.
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:53557/api';
 
 /**
  * Holt alle Batterieausfälle
@@ -57,9 +57,11 @@ export const getFilters = async () => {
     }
 };
 
-export const getBatteryFailures = async (filters) => {
+export const getBatteryFailures = async (filters = {}) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/batteryFailures`, filters);
+        const response = await axios.get(`${API_BASE_URL}/battery-failures`, {
+            params: filters
+        });
         return response.data;
     } catch (error) {
         console.error('Error fetching battery failures:', error);

@@ -10,34 +10,38 @@
  */
 
 import React from 'react';
-import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import WorldMap from './components/WorldMap';
+import AboutPage from './pages/AboutPage';
 // Importiere API.js falls direkte Backend-Abfragen hier benötigt werden
 // import API from './API';
 
 function App() {
   return (
     <Router>
-      <div className="App">
-        <header>
-          <h1>Battery Failure Visualization</h1>
-          <nav>
-            <ul>
-              <li><Link to="/">Map</Link></li>
-              {/* Weitere Navigationslinks können hier hinzugefügt werden */}
-            </ul>
-          </nav>
+      <div className="min-h-screen bg-dark-background text-dark-text">
+        <header className="bg-dark-primary shadow-lg">
+          <div className="container mx-auto px-4 py-6">
+            <h1 className="text-3xl font-bold mb-4">Battery Failure Visualization</h1>
+            <nav>
+              <ul className="flex space-x-6">
+                <li><Link to="/" className="hover:text-dark-accent transition-colors">Map</Link></li>
+                <li><Link to="/about" className="hover:text-dark-accent transition-colors">About</Link></li>
+              </ul>
+            </nav>
+          </div>
         </header>
-        <main>
-          <Switch>
-            <Route exact path="/">
-              <WorldMap />
-            </Route>
-            {/* Weitere Routen können hier ergänzt werden */}
-          </Switch>
+        <main className="container mx-auto px-4 py-8">
+          <Routes>
+            <Route path="/" element={<WorldMap />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         </main>
-        <footer>
-          <p>© 2025 Battery Failure Visualization</p>
+        <footer className="bg-dark-primary mt-auto">
+          <div className="container mx-auto px-4 py-6 text-center">
+            <p>© 2025 Battery Failure Visualization</p>
+          </div>
         </footer>
       </div>
     </Router>
