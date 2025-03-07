@@ -84,3 +84,6 @@ yarn-error.log*
 *.js.map
 *.ts.map
 frontend/.env
+
+# Generated Python requirements
+requirements.txt
