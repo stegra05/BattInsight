@@ -5,7 +5,7 @@
 
 from flask import Flask
 from flask_cors import CORS
-import config
+from backend import config
 import os
 import logging
 

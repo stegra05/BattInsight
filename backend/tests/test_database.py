@@ -8,12 +8,17 @@ Abhängigkeiten:
     	•	mock für Mock-Objekte.
 """
 
+import sys
+import os
+# Add project root to sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 import pytest
 from unittest.mock import MagicMock
 
 # Importiere die Database-Klasse aus dem entsprechenden Modul.
 # Passe den Importpfad bei Bedarf an.
-from database import Database
+from backend.database import Database
 
 
 @pytest.fixture
