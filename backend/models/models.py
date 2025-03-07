@@ -1,73 +1,112 @@
-"""
-Zweck: Definiert die Datenbanktabellen mit SQLAlchemy.
-Funktionen:
-	•	Erstellt ORM-Modelle für Batterieausfälle mit Spalten wie id, country, battery_type, failure_rate.
-	•	Erstellt ein Modell für Welt-KPIs basierend auf der CSV Datei 'world_kpi_anonym.csv'.
-Abhängigkeiten:
-	•	database.py für die Session.
-	•	Wird von data_processor.py und data_routes.py genutzt.
-"""
-
+from sqlalchemy import create_engine, Column, String, Integer, Float, func
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
+engine = create_engine('sqlite:///database.db')
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class BatteryFailure(Base):
     __tablename__ = 'battery_failures'
-
     id = Column(Integer, primary_key=True, index=True)
-    country = Column(String)
-    lat = Column(Float)
-    lng = Column(Float)
-    failures = Column(Integer)
-    battery_type = Column(String)
-    failure_date = Column(DateTime)
+    country = Column(String, index=True)
+    battery_type = Column(String, index=True)
+    climate = Column(String, index=True)
+    model_series = Column(String, index=True)
+    val = Column(Float)
+    cnt_vhcl = Column(Integer)
 
     def serialize(self):
         return {
-            "id": self.id,
-            "country": self.country,
-            "lat": self.lat,
-            "lng": self.lng,
-            "failures": self.failures,
-            "battery_type": self.battery_type,
-            "failure_date": self.failure_date.isoformat() if self.failure_date else None
+            'id': self.id,
+            'country': self.country,
+            'battery_type': self.battery_type,
+            'climate': self.climate,
+            'model_series': self.model_series,
+            'val': self.val,
+            'cnt_vhcl': self.cnt_vhcl
         }
 
-    def __repr__(self):
-        return f"<BatteryFailure(id={self.id}, country='{self.country}', model_series={self.model_series}, var='{self.var}', val={self.val})>"
-
-# Weitere Modelle können hier bei Bedarf ergänzt werden.
-
-# Neues Modell basierend auf der CSV Datei 'world_kpi_anonym.csv'
-# Die CSV enthält folgende Spalten:
-# battAlias;country;continent;climate;iso_a3;model_series;var;val;descr;cnt_vhcl
-class WorldKPI(Base):
-    __tablename__ = 'world_kpis'
-
-    id = Column(Integer, primary_key=True, index=True)
-    batt_alias = Column(String, index=True)  # entspricht battAlias
-    country = Column(String, index=True)
-    continent = Column(String, index=True)
-    climate = Column(String)
-    iso_a3 = Column(String, index=True)
-    model_series = Column(Integer)
-    var = Column(String)
-    val = Column(Integer)
-    descr = Column(String)
-    cnt_vhcl = Column(Integer)
-
-    def __repr__(self):
-        return (f"<WorldKPI(id={self.id}, batt_alias='{self.batt_alias}', country='{self.country}', "
-                f"continent='{self.continent}', climate='{self.climate}', iso_a3='{self.iso_a3}', "
-                f"model_series={self.model_series}, var='{self.var}', val={self.val}, "
-                f"descr='{self.descr}', cnt_vhcl={self.cnt_vhcl})>")
-
 def get_all_countries():
-    # Dummy implementation; replace with actual query logic if needed.
-    return ["Country1", "Country2", "Country3"]
+    session = SessionLocal()
+    try:
+        countries = session.query(BatteryFailure.country).distinct().all()
+        return [country[0] for country in countries]
+    finally:
+        session.close()
 
 def get_all_battery_types():
-    # Dummy implementation; replace with actual query logic if needed.
-    return ["TypeA", "TypeB"]
+    session = SessionLocal()
+    try:
+        battery_types = session.query(BatteryFailure.battery_type).distinct().all()
+        return [battery_type[0] for battery_type in battery_types]
+    finally:
+        session.close()
+
+def get_all_manufacturers():
+    # Assuming there is a manufacturers table or similar logic
+    pass
+
+def get_battery_performance_by_country(battAlias, var):
+    session = SessionLocal()
+    try:
+        query = session.query(BatteryFailure.country, func.avg(BatteryFailure.val).label('average_val'))
+        if battAlias:
+            query = query.filter(BatteryFailure.battery_type == battAlias)
+        if var:
+            query = query.filter(BatteryFailure.var == var)
+        query = query.group_by(BatteryFailure.country)
+        return query.all()
+    finally:
+        session.close()
+
+def get_battery_performance_by_climate(battAlias):
+    session = SessionLocal()
+    try:
+        query = session.query(BatteryFailure.climate, func.avg(BatteryFailure.val).label('average_val'))
+        if battAlias:
+            query = query.filter(BatteryFailure.battery_type == battAlias)
+        query = query.group_by(BatteryFailure.climate)
+        return query.all()
+    finally:
+        session.close()
+
+def get_model_series_distribution():
+    session = SessionLocal()
+    try:
+        query = session.query(BatteryFailure.country, BatteryFailure.model_series, func.count(BatteryFailure.id).label('cnt_vhcl'))
+        query = query.group_by(BatteryFailure.country, BatteryFailure.model_series)
+        return query.all()
+    finally:
+        session.close()
+
+def get_vehicle_count():
+    session = SessionLocal()
+    try:
+        query = session.query(BatteryFailure.country, BatteryFailure.battery_type, func.count(BatteryFailure.id).label('cnt_vhcl'))
+        query = query.group_by(BatteryFailure.country, BatteryFailure.battery_type)
+        return query.all()
+    finally:
+        session.close()
+
+def get_continent_summary():
+    session = SessionLocal()
+    try:
+        query = session.query(BatteryFailure.continent, func.avg(BatteryFailure.val).label('average_val'), func.sum(BatteryFailure.cnt_vhcl).label('total_vhcl'))
+        query = query.group_by(BatteryFailure.continent)
+        return query.all()
+    finally:
+        session.close()
+
+def get_outliers():
+    session = SessionLocal()
+    try:
+        global_avg = session.query(func.avg(BatteryFailure.val)).scalar()
+        global_stddev = session.query(func.stddev(BatteryFailure.val)).scalar()
+        threshold = global_avg + 2 * global_stddev
+        query = session.query(BatteryFailure.country, func.avg(BatteryFailure.val).label('average_val'))
+        query = query.group_by(BatteryFailure.country)
+        query = query.having(func.avg(BatteryFailure.val) > threshold)
+        return query.all()
+    finally:
+        session.close()

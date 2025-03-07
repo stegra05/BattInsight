@@ -16,7 +16,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 import os
-from backend import models
+
+# Define Base before using it
+Base = declarative_base()
+
+from .models import BatteryFailure
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'battery_failures.db')}"
@@ -25,11 +29,10 @@ DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'battery_failures.db')}"
 engine = create_engine(DATABASE_URL, echo=True)
 
 # Migrationen ausführen: Erstellen aller Tabellen, falls sie noch nicht existieren.
-models.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 # Konfigurieren des Session Makers
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
 
 @contextmanager
 def get_session():

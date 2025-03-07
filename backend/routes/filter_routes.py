@@ -9,7 +9,7 @@ Abhängigkeiten:
 """
 
 from flask import Blueprint, jsonify, request
-from models import get_all_countries, get_all_battery_types, get_all_manufacturers, get_battery_performance_by_country, get_battery_performance_by_climate, get_model_series_distribution, get_vehicle_count, get_continent_summary, get_outliers
+from models.models import get_all_countries, get_all_battery_types, get_all_manufacturers, get_battery_performance_by_country, get_battery_performance_by_climate, get_model_series_distribution, get_vehicle_count, get_continent_summary, get_outliers
 
 filter_routes = Blueprint('filter_routes', __name__, url_prefix='/api/filter')
 

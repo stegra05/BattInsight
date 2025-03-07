@@ -5,7 +5,8 @@
 
 from flask import Flask
 from flask_cors import CORS
-from backend import config
+from routes.filter_routes import filter_routes
+from routes.data_routes import data_routes
 import os
 import logging
 
@@ -13,6 +14,7 @@ import logging
 app = Flask(__name__)
 
 # Lade Konfigurationswerte aus config.py
+from models import config
 app.config.from_object(config)
 
 # Enable CORS
@@ -26,13 +28,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Registriere die API-Routen
-from routes.data_routes import data_routes
-from routes.filter_routes import filter_routes
 app.register_blueprint(data_routes)
 app.register_blueprint(filter_routes)
 
 # Optional: Initialisiere die Datenbank, falls erforderlich
-# from database import init_db
+# from models.database import init_db
 # init_db(app)
 
 @app.route('/')

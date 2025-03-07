@@ -9,8 +9,8 @@ Abhängigkeiten:
 """
 
 from flask import Blueprint, jsonify, request
-from database import SessionLocal
-from models import BatteryFailure
+from models.database import SessionLocal
+from models.models import BatteryFailure
 import logging
 
 logger = logging.getLogger(__name__)
