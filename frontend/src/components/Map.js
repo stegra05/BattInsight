@@ -1,1 +1,0 @@
-// React-Komponente für die interaktive Karte
