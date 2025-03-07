@@ -32,5 +32,21 @@ app.register_blueprint(filter_routes)
 # init_db(app)
 
 if __name__ == '__main__':
-    # Starte den Webserver
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    import os  # Added to read environment variables
+    import socket  # Added for dynamic port selection
+
+    def get_free_port():
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(('', 0))
+        port = s.getsockname()[1]
+        s.close()
+        return port
+
+    # Use the PORT environment variable if available; otherwise, choose a free port dynamically
+    port = os.environ.get('PORT')
+    if port:
+        port = int(port)
+    else:
+        port = get_free_port()
+    print(f"Starting server on port {port}")
+    app.run(debug=True, host='0.0.0.0', port=port)

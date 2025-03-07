@@ -8,33 +8,36 @@ Abhängigkeiten:
 	•	database.py für Session-Handling.
 """
 
-from fastapi import APIRouter, HTTPException
+from flask import Blueprint, jsonify
 from database import SessionLocal
 import models
 
-router = APIRouter()
+data_routes = Blueprint('data_routes', __name__, url_prefix='/api/data')
 
-@router.get("/api/data")
+@data_routes.route("/", methods=['GET'])
 def get_all_battery_failures():
     session = SessionLocal()
     try:
         battery_failures = session.query(models.BatteryFailure).all()
-        return battery_failures
+        return jsonify(battery_failures=[bf.serialize() for bf in battery_failures])
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Interner Serverfehler")
+        return jsonify(error="Interner Serverfehler"), 500
     finally:
         session.close()
 
-
-@router.get("/api/data/{country}")
+@data_routes.route("/<country>", methods=['GET'])
 def get_battery_failures_by_country(country: str):
     session = SessionLocal()
     try:
         battery_failures = session.query(models.BatteryFailure).filter(models.BatteryFailure.country == country).all()
         if not battery_failures:
-            raise HTTPException(status_code=404, detail=f"Keine Daten für das Land {country} gefunden")
-        return battery_failures
+            return jsonify(error=f"Keine Daten für das Land {country} gefunden"), 404
+        return jsonify(battery_failures=[bf.serialize() for bf in battery_failures])
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Interner Serverfehler")
+        return jsonify(error="Interner Serverfehler"), 500
     finally:
         session.close()
+
+@data_routes.route('/data')
+def get_data():
+    return jsonify({"message": "data route works"})

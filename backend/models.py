@@ -17,12 +17,19 @@ class BatteryFailure(Base):
     __tablename__ = 'battery_failures'
 
     id = Column(Integer, primary_key=True, index=True)
-    country = Column(String, index=True)
-    battery_type = Column(String)
-    failure_rate = Column(Float)
+    battAlias = Column(String)  # Changed from battery_alias
+    country = Column(String)
+    continent = Column(String, nullable=True)
+    climate = Column(String, nullable=True)
+    iso_a3 = Column(String, nullable=True)
+    model_series = Column(String)
+    var = Column(String)
+    val = Column(Float)
+    descr = Column(String)
+    cnt_vhcl = Column(Integer)
 
     def __repr__(self):
-        return f"<BatteryFailure(id={self.id}, country='{self.country}', battery_type='{self.battery_type}', failure_rate={self.failure_rate})>"
+        return f"<BatteryFailure(id={self.id}, country='{self.country}', model_series={self.model_series}, var='{self.var}', val={self.val})>"
 
 # Weitere Modelle können hier bei Bedarf ergänzt werden.
 
@@ -49,3 +56,11 @@ class WorldKPI(Base):
                 f"continent='{self.continent}', climate='{self.climate}', iso_a3='{self.iso_a3}', "
                 f"model_series={self.model_series}, var='{self.var}', val={self.val}, "
                 f"descr='{self.descr}', cnt_vhcl={self.cnt_vhcl})>")
+
+def get_all_countries():
+    # Dummy implementation; replace with actual query logic if needed.
+    return ["Country1", "Country2", "Country3"]
+
+def get_all_battery_types():
+    # Dummy implementation; replace with actual query logic if needed.
+    return ["TypeA", "TypeB"]
