@@ -1,184 +1,127 @@
-Battery Failure Visualization – Requirements Document
+# Requirements Document
 
-1. Einführung
+## Projektübersicht
 
-1.1 Zweck
+Das Ziel dieses Projekts ist die Entwicklung einer interaktiven Plattform zur Visualisierung von CSV-Daten, um Anomalien und Ausfälle im Bereich der Batteriedaten zu erkennen. Die Daten werden aus einer CSV-Datei importiert, in einer PostgreSQL-Datenbank gespeichert und über eine REST API für das Frontend bereitgestellt. Die Visualisierung erfolgt über eine interaktive Weltkarte, bei der die Länder basierend auf ausgewählten KPI-Werten farblich hervorgehoben werden. Zusätzlich wird ein AI-Feature integriert, das natürliche Sprachabfragen in SQL-Abfragen umwandelt, um spezifische Datenabfragen zu ermöglichen.
 
-Dieses Dokument beschreibt die Anforderungen für das Projekt zur Visualisierung von Daten aus CSV-Dateien. Das Hauptziel ist es, eine Plattform bereitzustellen, die es ermöglicht, beliebige Daten aus CSV-Dateien zu überwachen und zu analysieren, Anomalien oder Ausfälle zu erkennen und relevante Einblicke zu visualisieren, um die Zuverlässigkeit und Wartungsprozesse zu verbessern.
+---
 
-1.2 Umfang
+## Funktionsanforderungen
 
-Das System umfasst:
-	1.	Eine Datenbankkomponente, die für das Speichern und Abrufen von Daten aus CSV-Dateien verantwortlich ist.
-	2.	Eine Backend-Logikschicht, die Rohdaten verarbeitet, Abfragen bearbeitet und Datenflüsse orchestriert.
-	3.	Eine Visualisierungs- oder Frontend-Komponente, die Datenmetriken, Status und Warnungen in einer benutzerfreundlichen Oberfläche anzeigt.
+### 1. Datenverarbeitung
 
-1.3 Definitionen, Akronyme und Abkürzungen
-	•	Datenbank: Verwaltet die Persistenz von Daten aus CSV-Dateien.
-	•	Backend: Die serverseitige Anwendung, die mit der Datenbank verbunden ist, Daten verarbeitet und Funktionalitäten an Endbenutzer liefert (über eine API oder direkte Integration).
-	•	Visualisierung: Die Benutzeroberfläche (möglicherweise eine Web-UI) zur Darstellung von Daten und Analysen.
-	•	CSV-Datei: Eine Datei im Comma-Separated Values-Format, die tabellarische Daten speichert.
+- **CSV-Datenimport:**
+  - Der Datensatz wird aus einer CSV-Datei importiert, die folgende Felder enthält: `battAlias`, `country`, `continent`, `climate`, `iso_a3`, `model_series`, `var`, `val`, `descr`, `cnt_vhcl`.
+  - Die CSV-Daten werden mit Pandas eingelesen und bereinigt (z. B. Entfernung von Leerzeichen, Normalisierung von Feldnamen).
+  - Der Import erfolgt initial einmalig, mit der Möglichkeit, den Import bei Bedarf manuell oder periodisch erneut auszuführen.
 
-1.4 Referenzen
-	•	Pytest-Dokumentation für Unit- und Integrationstests.
-	•	Unittest.mock-Dokumentation für Mocking- und Patching-Funktionalitäten.
-	•	[Projekt-Quellcode-Repository] – Nicht angegeben, verweist jedoch auf den Speicherort von test_database.py und das Datenbankmodul.
+- **Datenbankintegration:**
+  - Die bereinigten Daten werden in einer PostgreSQL-Datenbank gespeichert.
+  - Es wird SQLAlchemy als ORM genutzt, um eine einfache und sichere Interaktion mit der Datenbank zu ermöglichen.
+  - Eine robuste Tabellenstruktur wird definiert, die alle relevanten Felder des Datensatzes abbildet.
 
-⸻
+### 2. API und Backend
 
-2. Gesamtbeschreibung
+- **Backend-Technologie:**
+  - Das Backend wird mit Python und Flask entwickelt.
+  - Es werden REST API-Endpunkte bereitgestellt, über die die verarbeiteten Daten abgerufen und gefiltert werden können.
 
-2.1 Produktperspektive
+- **API-Endpunkte:**
+  - **/api/data:** Liefert die vollständigen Datensätze, optional mit Filterparametern (z. B. Kontinent, Klima, Modellserie).
+  - **/api/filter:** Ermöglicht die dynamische Filterung der Daten anhand vordefinierter Kriterien.
+  - **/api/ai-query:** Nimmt natürliche Sprachabfragen entgegen, wandelt diese über die OpenAI API in SQL-Abfragen um, validiert die Abfragen und liefert die entsprechenden Daten zurück.
 
-Das Projekt ist Teil eines Datenanalysesystems. Es hängt ab von:
-	•	Einer Datenbank zum Speichern historischer und Echtzeitdaten.
-	•	Backend-Modulen, die die Datenaufnahme, -einfügung, -abfrage und -analyse orchestrieren.
-	•	Einer visuellen Schnittstelle für Stakeholder (z.B. Ingenieure, Techniker), um Daten und Vorhersagen anzuzeigen.
+### 3. AI-Integration
 
-2.2 Produktfunktionen
+- **Natürliche Sprachverarbeitung:**
+  - Ein Texteingabefeld ermöglicht es Benutzern, in natürlicher Sprache ihre Datenanfragen zu formulieren (z. B. "Zeige alle Daten für Europa mit gemäßigtem Klima").
+  - Die Anfrage wird an den `/api/ai-query` Endpunkt gesendet.
 
-Die Hauptfunktionen umfassen:
-	1.	Verbindung zur Datenbank: Sichere Verbindung für Lese-/Schreiboperationen herstellen.
-	2.	Daten einfügen: Daten aus CSV-Dateien (z.B. Spannungen, Ströme, Temperaturen, Zeitstempel) oder Metadaten in das System einfügen.
-	3.	Daten abfragen: Datenmetriken und Statusdetails zur Anzeige oder weiteren Verarbeitung abrufen.
-	4.	Verbindung trennen: Datenbankverbindungen sicher schließen, um Ressourcen freizugeben.
-	5.	Fehlerbehandlung: Fehler wie Verbindungsfehler oder Einfüge-/Abfragefehler elegant behandeln.
-	6.	Visualisierung: Daten in Diagrammen, Tabellen oder Warnungen für verschiedene Bedingungen darstellen.
+- **OpenAI API:**
+  - Die OpenAI API wird genutzt, um aus der natürlichen Sprache eine SQL-Abfrage zu generieren.
+  - Die generierten SQL-Abfragen werden validiert und optimiert, um sicherzustellen, dass sie korrekt und sicher sind, bevor sie an die Datenbank gesendet werden.
+  - Sicherheitsaspekte: Es wird geprüft, dass die SQL-Abfragen gegen SQL-Injection und andere Risiken abgesichert sind.
 
-2.3 Benutzermerkmale
-	•	Ingenieure/Entwickler, die an Datenanalysen arbeiten.
-	•	Techniker/Operatoren, die eine Echtzeit- oder historische Ansicht der Daten benötigen.
-	•	Datenwissenschaftler/Analysten, die tiefgehende Datenabfragen und -analysen für prädiktive Wartung benötigen.
+### 4. Frontend
 
-2.4 Einschränkungen
-	•	Muss unter den Leistungsbeschränkungen typischer Datenbanken arbeiten (z.B. Lese- und Schreiboperationen unter einer Sekunde für Echtzeitdaten).
-	•	Ressourcenbeschränkungen variieren je nach Umgebung (z.B. vor Ort Server vs. Cloud-basiert).
-	•	Sicherheitsbeschränkungen können eine sichere Authentifizierung/Autorisierung erfordern (außerhalb des Umfangs dieser Code-Snippets, aber Teil des Gesamtsystemdesigns).
+- **Technologie:**
+  - Das Frontend wird mit React entwickelt.
+  - Moderne UI-Designs werden mithilfe von Frameworks wie Chakra UI oder Tailwind CSS umgesetzt.
 
-2.5 Annahmen und Abhängigkeiten
-	•	Es wird angenommen, dass die Datenbank-Engine (z.B. PostgreSQL, MySQL, SQLite, etc.) unterstützt oder konfiguriert ist.
-	•	Python-Umgebung mit pytest für Tests und unittest.mock für das Mocking von Schnittstellen.
-	•	Zukünftige Erweiterungen können Integrationen mit externen Datenanbietern oder fortgeschrittenen Analyse-Pipelines umfassen.
+- **Datenvisualisierung:**
+  - **Tabellarische Darstellung:** Initial wird eine Tabelle verwendet, um die importierten Daten anzuzeigen.
+  - **Interaktive Weltkarte:** Mit Mapbox GL JS wird eine interaktive Weltkarte integriert, bei der Länder basierend auf den KPI-Werten farblich hervorgehoben werden.
+    - Hinweis: Mapbox bietet ein kostenloses Nutzungskontingent, jedoch können bei Überschreitung des Limits Kosten anfallen, da API-Aufrufe über einen API-Schlüssel abgerechnet werden.
 
-⸻
+- **Interaktive Filter:**
+  - **Dropdown-Menüs:** Für vordefinierte Filterkriterien wie Kontinent, Land, Klima, Modellserie und battAlias.
+  - **Schieberegler:** Für numerische Filter, insbesondere zur Festlegung von Wertebereichen für `val`.
+  - **Kombinierte Filter:** Eine Kombination aus Dropdowns und Schiebereglern, um eine intuitive und flexible Benutzerführung zu gewährleisten.
 
-3. Funktionale Anforderungen
+- **AI-Feature im Frontend:**
+  - Ein Texteingabefeld ermöglicht es Benutzern, natürliche Sprachabfragen einzugeben.
+  - Diese Abfragen werden an den entsprechenden API-Endpunkt weitergeleitet, und die Ergebnisse werden in der Anwendung angezeigt.
 
-Dieser Abschnitt beschreibt die einzelnen Funktionen des Projekts. Jede Anforderung ist als FR-# geschrieben.
+### 5. Filteranforderungen
 
-3.1 Datenbankverbindung
+Die folgenden Filteroptionen sollen implementiert werden:
 
-FR-1: Das System soll in der Lage sein, eine Verbindung zur zugrunde liegenden Datenbank herzustellen.
-	•	Beschreibung: Die Methode Database.connect() soll einen booleschen Wert zurückgeben, der den Erfolg anzeigt (z.B. True, wenn die Verbindung hergestellt ist).
-	•	Priorität: Hoch
-	•	Test:
-	•	Der Unit-Test test_database_connection überprüft, ob connect() True zurückgibt.
-	•	Er überprüft auch, ob connect() nur einmal aufgerufen wird.
+- **Kontinent:** Auswahlmöglichkeiten (z. B. Europa, Asien, Afrika, Nordamerika, Südamerika, Ozeanien, Antarktis).
+- **Land:** Auswahl basierend auf `country` oder `iso_a3`.
+- **Klima:** Filterung nach Klimatypen (z. B. tropisch, gemäßigt, arid, polar).
+- **Modellserie:** Auswahl basierend auf `model_series`.
+- **battAlias:** Auswahl spezifischer Aliasnamen.
+- **Variablenfilter:** Auswahl bestimmter `var`-Werte, kombiniert mit einem numerischen Filter für `val`.
+- **Zusätzliche Filter:** Optionaler Filter für `descr` (Stichwortsuche) und `cnt_vhcl` (Fahrzeuganzahl), sofern relevant.
 
-3.2 Daten einfügen
+---
 
-FR-2: Das System soll eine Möglichkeit bieten, Daten in die Datenbank einzufügen.
-	•	Beschreibung: Die Methode Database.insert(data) empfängt Daten oder Metadaten aus CSV-Dateien und speichert sie. Sie gibt eine Ganzzahl oder eine ähnliche Kennung zurück (z.B. eine neue Zeilen-ID).
-	•	Priorität: Hoch
-	•	Test:
-	•	Der Unit-Test test_database_insert stellt sicher, dass insert() den erwarteten Wert zurückgibt (z.B. 42 im Mock).
-	•	Er überprüft auch, ob insert() mit dem richtigen Argument aufgerufen wird.
+## Nicht-funktionale Anforderungen
 
-3.3 Daten abfragen
+- **Performance:**
+  - Schnelle Verarbeitung der CSV-Daten und schnelle API-Antwortzeiten, auch bei großen Datenmengen.
 
-FR-3: Das System soll Daten aus der Datenbank basierend auf Benutzerabfragen oder Filtern abrufen.
-	•	Beschreibung: Die Methode Database.query(query_string) gibt eine Liste von Dictionaries (oder eine ähnliche Struktur) zurück, die die angeforderten Zeilen enthält.
-	•	Priorität: Hoch
-	•	Test:
-	•	Der Unit-Test test_database_query überprüft, ob query() die erwartete Liste von Dictionaries zurückgibt.
-	•	Er überprüft auch, ob die Methode query mit dem richtigen Argument aufgerufen wird.
+- **Responsiveness:**
+  - Optimale Darstellung und Bedienbarkeit der Webanwendung auf Desktop-Umgebungen.
 
-3.4 Verbindung trennen
+- **Erweiterbarkeit:**
+  - Ein modular aufgebautes System, das die einfache Integration weiterer Datenquellen und Features ermöglicht.
 
-FR-4: Das System soll eine sichere Beendigung der Datenbankverbindung ermöglichen.
-	•	Beschreibung: Die Methode Database.disconnect() schließt alle offenen Verbindungen ordnungsgemäß und gibt einen booleschen Wert zurück (True bei Erfolg).
-	•	Priorität: Mittel
-	•	Test:
-	•	Der Unit-Test test_database_disconnect überprüft, ob die Methode True zurückgibt.
-	•	Er überprüft auch, ob die Methode einmal aufgerufen wird.
+- **Sicherheit:**
+  - Validierung der durch die AI generierten SQL-Abfragen zur Vermeidung von SQL-Injection und anderen Sicherheitsrisiken.
+  - Sicherer Umgang mit Benutzeranfragen und API-Endpunkten.
 
-3.5 Verbindungsfehler behandeln
+- **Wartbarkeit:**
+  - Gut strukturierter Code mit umfangreichen Unit-Tests (pytest für das Backend, Cypress für End-to-End-Tests).
+  - Detaillierte Dokumentation der API-Endpunkte und internen Funktionen zur einfachen Erweiterung und Fehlersuche.
 
-FR-5: Das System soll Ausnahmen behandeln, wenn die Datenbankverbindung fehlschlägt.
-	•	Beschreibung: Wenn die zugrunde liegende Datenbankverbindung nicht hergestellt werden kann, sollte Database.connect() eine Ausnahme mit einer entsprechenden Fehlermeldung auslösen.
-	•	Priorität: Hoch
-	•	Test:
-	•	Der Unit-Test test_database_connection_failure mockt eine Ausnahme (Exception("Connection failed")) und stellt sicher, dass das System sie auslöst.
+---
 
-3.6 Einfügefehler behandeln
+## Infrastruktur & Deployment
 
-FR-6: Das System soll Ausnahmen behandeln, wenn das Einfügen von Daten fehlschlägt.
-	•	Beschreibung: Wenn das Einfügen nicht erfolgreich ist, sollte Database.insert() eine Ausnahme mit einer informativen Nachricht auslösen.
-	•	Priorität: Hoch
-	•	Test:
-	•	Der Unit-Test test_database_insert_failure mockt eine Ausnahme (Exception("Insert failed")) und überprüft, ob sie ausgelöst wird.
+- **Containerisierung:**
+  - Einsatz von Docker zur Containerisierung der einzelnen Komponenten (Backend, Frontend, Datenbank).
+  - Nutzung von Docker Compose zur Orchestrierung von Flask-Backend, React-Frontend und PostgreSQL-Datenbank.
 
-3.7 Visualisierung
+- **Deployment:**
+  - Bereitstellung der Anwendung in einem konsistenten, containerisierten Umfeld, das eine einfache Skalierung und Bereitstellung auf verschiedenen Plattformen ermöglicht.
 
-FR-7: Das System sollte Echtzeit- oder nahezu Echtzeit-Visualisierungen von Daten und Anomalien bereitstellen.
-	•	Beschreibung: Die über Database.query() abgerufenen Daten würden Diagramme, Dashboards oder Warnungen füllen, um die Daten zu überwachen. (Die Implementierung ist nicht im bereitgestellten Snippet enthalten, wird aber aus den Projektzielen abgeleitet.)
-	•	Priorität: Mittel
-	•	Test:
-	•	Integrations- und UI-Tests (zukünftig) würden bestätigen, dass die richtigen Daten im Frontend angezeigt werden.
+---
 
-⸻
+## Testing & Entwicklungsprozess
 
-4. Nicht-funktionale Anforderungen
+- **Unit Testing:**
+  - Einsatz von pytest zur Absicherung der API-Endpunkte und Kernfunktionen im Backend.
 
-4.1 Leistung
-	•	NFR-1: Datenbankoperationen sollten innerhalb einer akzeptablen Zeit abgeschlossen sein (z.B. unter 100ms für typische Abfragen, abhängig von Netzwerk- und Datenvolumenbeschränkungen).
-	•	NFR-2: Das System sollte skalierbar sein, um große Datenmengen zu verarbeiten, insbesondere in Produktionsumgebungen.
+- **End-to-End Testing:**
+  - Nutzung von Cypress für End-to-End-Tests, um den kompletten Workflow der Anwendung zu validieren (vom CSV-Import über die API bis zur Visualisierung).
 
-4.2 Zuverlässigkeit
-	•	NFR-3: Das System sollte intermittierende Verbindungsprobleme überstehen; Teilausfälle sollten das gesamte System nicht zum Absturz bringen.
+- **Entwicklungsumgebung:**
+  - Verwendung von VS Code mit GitHub Copilot, um schnelle Prototypen und effiziente Entwicklung zu unterstützen.
+  - Einrichtung einer kontinuierlichen Integration (CI) in zukünftigen Erweiterungen, um automatisierte Tests und Deployments zu ermöglichen.
 
-4.3 Wartbarkeit
-	•	NFR-4: Der Code sollte einem konsistenten Stil folgen und durch Unit-Tests abgedeckt sein (z.B. die Tests in test_database.py).
-	•	NFR-5: Datenbankschemata und APIs sollten dokumentiert sein, um zukünftige Updates zu erleichtern.
+---
 
-4.4 Benutzerfreundlichkeit (Visualisierung)
-	•	NFR-6: Die Visualisierungskomponente sollte eine intuitive Benutzeroberfläche mit klarer Beschriftung, Echtzeit-Diagrammen (wo zutreffend) und einem responsiven Design haben.
+## Zusammenfassung
 
-4.5 Sicherheit
-	•	NFR-7: Der Zugriff auf Daten sollte auf autorisierte Benutzer beschränkt sein.
-	•	NFR-8: Das System sollte sichere Protokolle (z.B. SSL/TLS) für Datenübertragungen implementieren.
-(Dies liegt außerhalb des Umfangs des Snippets, ist aber in der Produktion unerlässlich.)
-
-⸻
-
-5. Systemarchitektur-Übersicht
-
-Eine Übersicht auf hoher Ebene:
-	1.	Frontend (Visualisierung) – Eine mögliche Web-UI oder andere Darstellungsschicht für Echtzeit- oder historische Daten.
-	2.	Backend – Python-basierte Logik, die Anfragen empfängt, Daten verarbeitet, mit der Datenbank interagiert und bei Bedarf Analysen durchführt.
-	3.	Datenbank – Speichert Daten (Tabellen für Rohmessungen, Fehlerprotokolle, historische Aufzeichnungen).
-
-⸻
-
-6. Testen und Validierung
-	•	Unit-Tests: Bereits in test_database.py mit pytest exemplifiziert. Fokus auf jede Methode in der Database-Klasse.
-	•	Integrationstests: Um sicherzustellen, dass der gesamte Workflow von der Datenaufnahme bis zur Visualisierung wie beabsichtigt funktioniert.
-	•	End-to-End-Tests: (Geplant) Simulieren die reale Nutzung, einschließlich des Speicherns von Beispieldaten und der Erstellung von visuellen Berichten.
-
-⸻
-
-7. Bereitstellungsüberlegungen
-	•	Konfiguration: Die Datenbankverbindungsdetails, Umgebungsvariablen usw. müssen für verschiedene Umgebungen (Entwicklung, Staging, Produktion) leicht konfigurierbar sein.
-	•	Logging und Monitoring: Das System sollte wichtige Ereignisse (Verbindungen, Fehler) protokollieren und in Echtzeit überwacht werden.
-	•	CI/CD: Automatisierte Pipelines können die Testsuite (pytest) vor dem Bereitstellen von Updates ausführen, um die Stabilität zu gewährleisten.
-
-⸻
-
-8. Anhang
-	•	Beispieldaten:
-	•	Spannungs-/Strommessungen.
-	•	Zeitstempel für jede Messung.
-	•	Anomalien oder Fehlerzustände, die von externen Analysen markiert wurden (falls vorhanden).
-	•	Weitere Dokumentation:
-	•	API-Dokumentation für die öffentlichen Methoden der Database-Klasse.
-	•	Referenzen zu Visualisierungsbibliotheken (z.B. Matplotlib, Plotly, D3.js oder eine andere Frontend-Bibliothek).
+Dieses Requirements Document definiert detailliert die Anforderungen und den Implementierungsansatz für das Projekt "Battery Failure Visualization". Es beschreibt die Verarbeitung und Speicherung der CSV-Daten, die Bereitstellung einer REST API, die Integration eines AI-Features zur SQL-Generierung sowie die Entwicklung eines interaktiven Frontends mit Mapbox GL JS und umfassenden Filteroptionen. Alle Komponenten werden containerisiert bereitgestellt, um eine skalierbare und konsistente Deployment-Lösung zu gewährleisten. Unit- und End-to-End-Tests sichern die Funktionalität und Stabilität der Anwendung.

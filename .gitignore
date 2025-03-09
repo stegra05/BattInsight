@@ -6,3 +6,6 @@ build/
 *.log
 *.env
 Dockerfile
+venv/
+*.sqlite3
+*.db
