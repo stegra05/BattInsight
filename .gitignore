@@ -1,11 +1,18 @@
+# Python-related
 __pycache__/
-node_modules/
 *.pyc
-.venv/
-build/
-*.log
-*.env
-Dockerfile
-venv/
+*.pyo
+*.pyd
+.Python
 *.sqlite3
-*.db
+.env
+venv/
+
+# Node.js-related
+node_modules/
+npm-debug.log*
+
+# IDE-related
+.vscode/
+.idea/
+*.iml

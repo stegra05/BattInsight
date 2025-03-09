@@ -1,127 +1,184 @@
-# Requirements Document
+Battery Failure Visualization – Requirements Document
 
-## Projektübersicht
+1. Introduction
 
-Das Ziel dieses Projekts ist die Entwicklung einer interaktiven Plattform zur Visualisierung von CSV-Daten, um Anomalien und Ausfälle im Bereich der Batteriedaten zu erkennen. Die Daten werden aus einer CSV-Datei importiert, in einer PostgreSQL-Datenbank gespeichert und über eine REST API für das Frontend bereitgestellt. Die Visualisierung erfolgt über eine interaktive Weltkarte, bei der die Länder basierend auf ausgewählten KPI-Werten farblich hervorgehoben werden. Zusätzlich wird ein AI-Feature integriert, das natürliche Sprachabfragen in SQL-Abfragen umwandelt, um spezifische Datenabfragen zu ermöglichen.
+1.1 Purpose
 
----
+This document outlines the requirements for the Battery Failure Visualization project. Its overarching goal is to provide a platform for monitoring and analyzing battery data, detecting anomalies or failures, and visualizing relevant insights to improve battery reliability and maintenance processes.
 
-## Funktionsanforderungen
+1.2 Scope
 
-### 1. Datenverarbeitung
+The system encompasses:
+	1.	A Database component responsible for storing and retrieving battery data.
+	2.	A Backend logic layer that processes raw data, handles queries, and orchestrates data flows.
+	3.	A Visualization or Frontend (not fully detailed in the provided snippet, but included here for completeness) that displays battery metrics, statuses, and alerts in a user-friendly interface.
 
-- **CSV-Datenimport:**
-  - Der Datensatz wird aus einer CSV-Datei importiert, die folgende Felder enthält: `battAlias`, `country`, `continent`, `climate`, `iso_a3`, `model_series`, `var`, `val`, `descr`, `cnt_vhcl`.
-  - Die CSV-Daten werden mit Pandas eingelesen und bereinigt (z. B. Entfernung von Leerzeichen, Normalisierung von Feldnamen).
-  - Der Import erfolgt initial einmalig, mit der Möglichkeit, den Import bei Bedarf manuell oder periodisch erneut auszuführen.
+1.3 Definitions, Acronyms, and Abbreviations
+	•	Database: Manages persistence of battery data.
+	•	Backend: The server-side application that connects to the database, processes data, and delivers functionality to end users (via an API or direct integration).
+	•	Visualization: The user interface (potentially a web UI) for presenting battery data and analytics.
+	•	Battery Failure: Any abnormal condition that leads to reduced capacity, malfunction, or hazardous operation state in a battery.
 
-- **Datenbankintegration:**
-  - Die bereinigten Daten werden in einer PostgreSQL-Datenbank gespeichert.
-  - Es wird SQLAlchemy als ORM genutzt, um eine einfache und sichere Interaktion mit der Datenbank zu ermöglichen.
-  - Eine robuste Tabellenstruktur wird definiert, die alle relevanten Felder des Datensatzes abbildet.
+1.4 References
+	•	Pytest documentation for unit and integration testing.
+	•	Unittest.mock documentation for mocking and patching functionalities.
+	•	[Project Source Code Repository] – Not provided, but references the location of test_database.py and the Database module.
 
-### 2. API und Backend
+⸻
 
-- **Backend-Technologie:**
-  - Das Backend wird mit Python und Flask entwickelt.
-  - Es werden REST API-Endpunkte bereitgestellt, über die die verarbeiteten Daten abgerufen und gefiltert werden können.
+2. Overall Description
 
-- **API-Endpunkte:**
-  - **/api/data:** Liefert die vollständigen Datensätze, optional mit Filterparametern (z. B. Kontinent, Klima, Modellserie).
-  - **/api/filter:** Ermöglicht die dynamische Filterung der Daten anhand vordefinierter Kriterien.
-  - **/api/ai-query:** Nimmt natürliche Sprachabfragen entgegen, wandelt diese über die OpenAI API in SQL-Abfragen um, validiert die Abfragen und liefert die entsprechenden Daten zurück.
+2.1 Product Perspective
 
-### 3. AI-Integration
+The project is part of a battery analysis system. It depends on:
+	•	Database for storing historical and real-time data.
+	•	Backend modules that orchestrate ingestion, insertion, querying, and analysis.
+	•	Visual Interface for stakeholders (e.g., engineers, technicians) to view battery health and failure predictions.
 
-- **Natürliche Sprachverarbeitung:**
-  - Ein Texteingabefeld ermöglicht es Benutzern, in natürlicher Sprache ihre Datenanfragen zu formulieren (z. B. "Zeige alle Daten für Europa mit gemäßigtem Klima").
-  - Die Anfrage wird an den `/api/ai-query` Endpunkt gesendet.
+2.2 Product Functions
 
-- **OpenAI API:**
-  - Die OpenAI API wird genutzt, um aus der natürlichen Sprache eine SQL-Abfrage zu generieren.
-  - Die generierten SQL-Abfragen werden validiert und optimiert, um sicherzustellen, dass sie korrekt und sicher sind, bevor sie an die Datenbank gesendet werden.
-  - Sicherheitsaspekte: Es wird geprüft, dass die SQL-Abfragen gegen SQL-Injection und andere Risiken abgesichert sind.
+The key functionalities include:
+	1.	Connect to Database: Securely establish a connection for read/write operations.
+	2.	Insert Data: Ingest battery-related data (voltages, currents, temperatures, timestamps) or metadata into the system.
+	3.	Query Data: Retrieve battery metrics and status details for display or further processing.
+	4.	Disconnect: Safely close database connections to free resources.
+	5.	Error Handling: Graceful handling of exceptions such as connection failures or insertion/query errors.
+	6.	Visualization (future or separate module): Present data in charts, tables, or alerts for battery conditions.
 
-### 4. Frontend
+2.3 User Characteristics
+	•	Engineers/Developers working on battery health data.
+	•	Technicians/Operators needing real-time or historical view of battery performance.
+	•	Data Scientists/Analysts requiring in-depth data queries and analyses for predictive maintenance.
 
-- **Technologie:**
-  - Das Frontend wird mit React entwickelt.
-  - Moderne UI-Designs werden mithilfe von Frameworks wie Chakra UI oder Tailwind CSS umgesetzt.
+2.4 Constraints
+	•	Must operate under the performance constraints typical of databases (e.g., sub-second read and write operations for real-time data).
+	•	Resource constraints vary by environment (e.g., on-site server vs. cloud-based).
+	•	Security constraints may require secure authentication/authorization (beyond the scope of these code snippets, but part of overall system design).
 
-- **Datenvisualisierung:**
-  - **Tabellarische Darstellung:** Initial wird eine Tabelle verwendet, um die importierten Daten anzuzeigen.
-  - **Interaktive Weltkarte:** Mit Mapbox GL JS wird eine interaktive Weltkarte integriert, bei der Länder basierend auf den KPI-Werten farblich hervorgehoben werden.
-    - Hinweis: Mapbox bietet ein kostenloses Nutzungskontingent, jedoch können bei Überschreitung des Limits Kosten anfallen, da API-Aufrufe über einen API-Schlüssel abgerechnet werden.
+2.5 Assumptions and Dependencies
+	•	The database engine (e.g., PostgreSQL, MySQL, SQLite, etc.) is assumed to be supported or configured.
+	•	Python environment with pytest for testing and unittest.mock for mocking interfaces.
+	•	Future expansions may include integrations with external battery data providers or advanced analytics pipelines.
 
-- **Interaktive Filter:**
-  - **Dropdown-Menüs:** Für vordefinierte Filterkriterien wie Kontinent, Land, Klima, Modellserie und battAlias.
-  - **Schieberegler:** Für numerische Filter, insbesondere zur Festlegung von Wertebereichen für `val`.
-  - **Kombinierte Filter:** Eine Kombination aus Dropdowns und Schiebereglern, um eine intuitive und flexible Benutzerführung zu gewährleisten.
+⸻
 
-- **AI-Feature im Frontend:**
-  - Ein Texteingabefeld ermöglicht es Benutzern, natürliche Sprachabfragen einzugeben.
-  - Diese Abfragen werden an den entsprechenden API-Endpunkt weitergeleitet, und die Ergebnisse werden in der Anwendung angezeigt.
+3. Functional Requirements
 
-### 5. Filteranforderungen
+This section details the project’s individual functions. Each requirement is written as FR-#.
 
-Die folgenden Filteroptionen sollen implementiert werden:
+3.1 Database Connection
 
-- **Kontinent:** Auswahlmöglichkeiten (z. B. Europa, Asien, Afrika, Nordamerika, Südamerika, Ozeanien, Antarktis).
-- **Land:** Auswahl basierend auf `country` oder `iso_a3`.
-- **Klima:** Filterung nach Klimatypen (z. B. tropisch, gemäßigt, arid, polar).
-- **Modellserie:** Auswahl basierend auf `model_series`.
-- **battAlias:** Auswahl spezifischer Aliasnamen.
-- **Variablenfilter:** Auswahl bestimmter `var`-Werte, kombiniert mit einem numerischen Filter für `val`.
-- **Zusätzliche Filter:** Optionaler Filter für `descr` (Stichwortsuche) und `cnt_vhcl` (Fahrzeuganzahl), sofern relevant.
+FR-1: The system shall be able to establish a connection to the underlying database.
+	•	Description: The Database.connect() method is expected to return a boolean indicating success (e.g., True if the connection is established).
+	•	Priority: High
+	•	Test:
+	•	The unit test test_database_connection checks that connect() returns True.
+	•	It also verifies connect() is called only once.
 
----
+3.2 Insert Data
 
-## Nicht-funktionale Anforderungen
+FR-2: The system shall provide a way to insert data into the database.
+	•	Description: The Database.insert(data) method receives some form of battery data or metadata and stores it. It returns an integer or similar identifier (e.g., a new row ID).
+	•	Priority: High
+	•	Test:
+	•	The unit test test_database_insert ensures insert() returns the expected value (e.g., 42 in the mock).
+	•	It also verifies insert() is called with the correct argument.
 
-- **Performance:**
-  - Schnelle Verarbeitung der CSV-Daten und schnelle API-Antwortzeiten, auch bei großen Datenmengen.
+3.3 Query Data
 
-- **Responsiveness:**
-  - Optimale Darstellung und Bedienbarkeit der Webanwendung auf Desktop-Umgebungen.
+FR-3: The system shall retrieve data from the database based on user queries or filters.
+	•	Description: The Database.query(query_string) method returns a list of dictionaries (or similar structure) containing the requested rows.
+	•	Priority: High
+	•	Test:
+	•	The unit test test_database_query verifies query() returns the expected list of dictionaries.
+	•	It also checks the query method is called with the correct argument.
 
-- **Erweiterbarkeit:**
-  - Ein modular aufgebautes System, das die einfache Integration weiterer Datenquellen und Features ermöglicht.
+3.4 Disconnect
 
-- **Sicherheit:**
-  - Validierung der durch die AI generierten SQL-Abfragen zur Vermeidung von SQL-Injection und anderen Sicherheitsrisiken.
-  - Sicherer Umgang mit Benutzeranfragen und API-Endpunkten.
+FR-4: The system shall allow safe termination of the database connection.
+	•	Description: The Database.disconnect() method properly closes any open connections and returns a boolean (True upon success).
+	•	Priority: Medium
+	•	Test:
+	•	The unit test test_database_disconnect checks the method returns True.
+	•	It also verifies that the method is called once.
 
-- **Wartbarkeit:**
-  - Gut strukturierter Code mit umfangreichen Unit-Tests (pytest für das Backend, Cypress für End-to-End-Tests).
-  - Detaillierte Dokumentation der API-Endpunkte und internen Funktionen zur einfachen Erweiterung und Fehlersuche.
+3.5 Handle Connection Failures
 
----
+FR-5: The system shall handle exceptions when the database connection fails.
+	•	Description: If the underlying database connection cannot be established, Database.connect() should raise an exception with an appropriate error message.
+	•	Priority: High
+	•	Test:
+	•	The unit test test_database_connection_failure mocks an exception (Exception("Connection failed")) and asserts that the system raises it.
 
-## Infrastruktur & Deployment
+3.6 Handle Insert Failures
 
-- **Containerisierung:**
-  - Einsatz von Docker zur Containerisierung der einzelnen Komponenten (Backend, Frontend, Datenbank).
-  - Nutzung von Docker Compose zur Orchestrierung von Flask-Backend, React-Frontend und PostgreSQL-Datenbank.
+FR-6: The system shall handle exceptions when data insertion fails.
+	•	Description: If insertion is unsuccessful, Database.insert() should raise an exception with an informative message.
+	•	Priority: High
+	•	Test:
+	•	The unit test test_database_insert_failure mocks an exception (Exception("Insert failed")) and checks that it is raised.
 
-- **Deployment:**
-  - Bereitstellung der Anwendung in einem konsistenten, containerisierten Umfeld, das eine einfache Skalierung und Bereitstellung auf verschiedenen Plattformen ermöglicht.
+3.7 Visualization (Planned / Future)
 
----
+FR-7: The system should provide real-time or near-real-time visualizations of battery data and anomalies.
+	•	Description: The data retrieved via Database.query() would populate charts, dashboards, or alerts to help monitor battery health. (Implementation is not in the provided snippet but is inferred from project goals.)
+	•	Priority: Medium
+	•	Test:
+	•	Integration and UI tests (future) would confirm that correct data is displayed in the frontend.
 
-## Testing & Entwicklungsprozess
+⸻
 
-- **Unit Testing:**
-  - Einsatz von pytest zur Absicherung der API-Endpunkte und Kernfunktionen im Backend.
+4. Non-Functional Requirements
 
-- **End-to-End Testing:**
-  - Nutzung von Cypress für End-to-End-Tests, um den kompletten Workflow der Anwendung zu validieren (vom CSV-Import über die API bis zur Visualisierung).
+4.1 Performance
+	•	NFR-1: Database operations should complete within acceptable time (e.g., under 100ms for typical queries, subject to network and data volume constraints).
+	•	NFR-2: The system should scale to handle large volumes of battery data, especially in production environments.
 
-- **Entwicklungsumgebung:**
-  - Verwendung von VS Code mit GitHub Copilot, um schnelle Prototypen und effiziente Entwicklung zu unterstützen.
-  - Einrichtung einer kontinuierlichen Integration (CI) in zukünftigen Erweiterungen, um automatisierte Tests und Deployments zu ermöglichen.
+4.2 Reliability
+	•	NFR-3: System shall withstand intermittent connectivity issues; partial failures should not bring the entire system down.
 
----
+4.3 Maintainability
+	•	NFR-4: Code shall follow consistent style and be covered by unit tests (e.g., the tests in test_database.py).
+	•	NFR-5: Database schemas and APIs should be documented for easier future updates.
 
-## Zusammenfassung
+4.4 Usability (Future Visualization)
+	•	NFR-6: The visualization component should have an intuitive interface with clear labeling, real-time charts (where applicable), and a responsive design.
 
-Dieses Requirements Document definiert detailliert die Anforderungen und den Implementierungsansatz für das Projekt "Battery Failure Visualization". Es beschreibt die Verarbeitung und Speicherung der CSV-Daten, die Bereitstellung einer REST API, die Integration eines AI-Features zur SQL-Generierung sowie die Entwicklung eines interaktiven Frontends mit Mapbox GL JS und umfassenden Filteroptionen. Alle Komponenten werden containerisiert bereitgestellt, um eine skalierbare und konsistente Deployment-Lösung zu gewährleisten. Unit- und End-to-End-Tests sichern die Funktionalität und Stabilität der Anwendung.
+4.5 Security
+	•	NFR-7: Access to battery data should be restricted to authorized users.
+	•	NFR-8: The system should implement secure protocols (e.g., SSL/TLS) for data in transit.
+(This is out of scope of the snippet but essential in production.)
+
+⸻
+
+5. System Architecture Overview
+
+A high-level view:
+	1.	Frontend (Visualization) – A possible web UI or other display layer for real-time or historical battery data.
+	2.	Backend – Python-based logic that receives requests, processes data, interacts with the database, and runs analytics if needed.
+	3.	Database – Persists battery data (tables for raw measurements, error logs, historical records).
+
+⸻
+
+6. Testing and Validation
+	•	Unit Tests: Already exemplified in test_database.py using pytest. Focus on each method in the Database class.
+	•	Integration Tests: To ensure the entire workflow from data ingestion to visualization works as intended.
+	•	End-to-End Tests: (Planned) Simulate real-world usage, including storing sample battery readings and generating visual reports.
+
+⸻
+
+7. Deployment Considerations
+	•	Configuration: The database connection details, environment variables, etc., must be easily configurable for different environments (development, staging, production).
+	•	Logging and Monitoring: The system should log significant events (connections, errors) and be monitored for real-time operational status.
+	•	CI/CD: Automated pipelines can run the test suite (pytest) before deploying updates to ensure stability.
+
+⸻
+
+8. Appendix
+	•	Sample Data:
+	•	Battery voltage/current measurements.
+	•	Timestamps for each measurement.
+	•	Anomalies or error states flagged by external analytics (if any).
+	•	Further Documentation:
+	•	API documentation for the Database class’s public methods.
+	•	Visualization library references (e.g., Matplotlib, Plotly, D3.js, or another front-end library).

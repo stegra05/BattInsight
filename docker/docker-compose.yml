@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  backend:
+    # Baut das Backend-Image basierend auf dem Dockerfile im docker-Ordner und dem Projektstamm als Kontext
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: development
+
+  frontend:
+    # Verwendet das offizielle Node.js-Image, um das Frontend zu starten
+    image: node:14
+    working_dir: /app
+    # Bindet den Frontend-Code aus dem übergeordneten Verzeichnis ein (Annahme: /frontend im Projektstamm)
+    volumes:
+      - ../frontend:/app
+    command: "npm start"
+    ports:
+      - "3000:3000"
+
+# Zweck: Startet das Backend + Frontend mit Docker Compose.
+# Abhängigkeiten:
+#   • Dockerfile für Backend
+#   • Node.js für Frontend

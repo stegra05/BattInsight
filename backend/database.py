@@ -1,7 +1,41 @@
 """
-Ziel & Funktion:
-	•	Baut die Verbindung zur PostgreSQL-Datenbank auf und stellt Funktionen zur Verwaltung von Datenbank-Sessions bereit.
-	•	Wird als zentraler Punkt für alle datenbankbezogenen Operationen genutzt.
+Zweck: Initialisiert die Datenbankverbindung mit SQLAlchemy.
+
+Funktionen:
+  • Erstellt eine Verbindung zur SQLite/PostgreSQL-Datenbank.
+  • Führt Migrationen aus (falls benötigt).
+  • Stellt eine Session zur Verfügung.
+
 Abhängigkeiten:
-	•	Wird von fast allen anderen Backend-Modulen (z. B. app.py, init_db.py, ai_query.py) importiert.
+  • config.py für den Datenbankverbindungs-String.
+  • models.py für die Tabellenstrukturen.
 """
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from contextlib import contextmanager
+import config
+import models
+
+# Erstellen der Engine. Der Verbindungs-String wird aus config.py geladen.
+engine = create_engine(config.DATABASE_URL, echo=True)
+
+# Migrationen ausführen: Erstellen aller Tabellen, falls sie noch nicht existieren.
+models.Base.metadata.create_all(bind=engine)
+
+# Konfigurieren des Session Makers
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+@contextmanager
+def get_session():
+    """Stellt eine SQLAlchemy-Session als Kontextmanager zur Verfügung."""
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+# Optional: Falls du eine einfache Funktion bevorzugst, die direkt eine Session zurückgibt, kannst du folgenden Code verwenden:
+# def get_session_direct():
+#     """Gibt eine neue SQLAlchemy-Session zurück. Der Aufrufer ist verantwortlich für das Schließen der Session."""
+#     return SessionLocal()
