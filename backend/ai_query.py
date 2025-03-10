@@ -9,11 +9,13 @@ import os
 import re
 import json
 import openai
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, current_app
 from sqlalchemy.exc import SQLAlchemyError
 from .database import db_session
 from .models import BatteryData
+import uuid
+from sqlalchemy import text
 
 # Create a Blueprint for AI query routes
 ai_query_routes = Blueprint('ai_query_routes', __name__)
@@ -26,7 +28,7 @@ def get_openai_client():
         raise ValueError("OpenAI API key is not set in the environment variables")
     
     # Initialize the client with the API key
-    client = openai.OpenAI(api_key=api_key)
+    client = openai.OpenAI(api_key=api_key)  # Ensure no unsupported arguments are passed
     return client
 
 def generate_sql_from_natural_language(query_text):
@@ -101,7 +103,15 @@ def validate_sql_query(sql_query):
     dangerous_patterns = [
         r'\bdelete\b', r'\bdrop\b', r'\btruncate\b', r'\balter\b', 
         r'\bcreate\b', r'\binsert\b', r'\bupdate\b', r'\bmerge\b',
-        r'\bexec\b', r'\bexecute\b', r'--', r';\s*\w', r'xp_cmdshell'
+        r'\bexec\b', r'\bexecute\b', r'--', r';\s*\w', r'xp_cmdshell',
+        # Additional dangerous patterns
+        r'\bunion\b', r'\bintersect\b', r'\bexcept\b',  # SQL set operations that could be used for injection
+        r'\binto\s+outfile\b', r'\binto\s+dumpfile\b',  # File operations
+        r'\bload_file\b', r'\bsys_eval\b',              # File and system operations
+        r'\bsystem_user\b', r'\bcurrent_user\b',        # User information
+        r'\bschema\b', r'\binformation_schema\b',       # Database metadata
+        r'\bpg_\w+\b',                                  # PostgreSQL system functions
+        r'\bpg_sleep\b', r'\bwaitfor\s+delay\b'         # Time-based attacks
     ]
     
     for pattern in dangerous_patterns:
@@ -112,23 +122,26 @@ def validate_sql_query(sql_query):
     if not sql_lower.strip().startswith('select'):
         return False, "Only SELECT queries are allowed"
     
+    # Check for multiple statements
+    if ';' in sql_query:
+        return False, "Multiple SQL statements are not allowed"
+    
     # Check for JOIN operations
     if re.search(r'\bjoin\b', sql_query, re.IGNORECASE):
         return False, "JOIN operations are not permitted"
     
     # Check for wildcard selects
-    if re.search(r'select\s+\*', sql_lower):
-        return False, "Wildcard selects are not allowed. Specify columns explicitly."
+    if re.search(r'select\s+\*', sql_query, re.IGNORECASE):
+        return False, "Wildcard (*) selects are not allowed. Please specify column names explicitly."
     
-    # Ensure the query only accesses the battery_data table
-    tables = re.findall(r'\bfrom\s+([\w_]+)\b', sql_lower)
+    # Limit the tables that can be queried to only the battery_data table
+    allowed_tables = ['battery_data']
+    table_pattern = r'\bfrom\s+([a-zA-Z0-9_]+)'
+    tables = re.findall(table_pattern, sql_query, re.IGNORECASE)
+    
     for table in tables:
-        if table != 'battery_data':
+        if table.lower() not in [t.lower() for t in allowed_tables]:
             return False, f"Access to table '{table}' is not allowed"
-    
-    # Limit the number of results to prevent excessive data retrieval
-    if 'limit' not in sql_lower:
-        sql_query += " LIMIT 1000"
     
     return True, sql_query
 
@@ -141,29 +154,43 @@ def optimize_sql_query(sql_query):
     Returns:
         str: Optimized SQL query.
     """
-    # Add appropriate indexes if they're not being used
-    # This is a simplified example - in a real system, you might analyze the query plan
+    # Convert to lowercase for pattern matching but keep original for modifications
+    sql_lower = sql_query.lower()
+    
+    # Ensure LIMIT is applied to prevent excessive data retrieval
+    if 'limit' not in sql_lower:
+        # If there's already a semicolon at the end, insert before it
+        if sql_query.rstrip().endswith(';'):
+            sql_query = sql_query.rstrip()[:-1] + " LIMIT 1000;"
+        else:
+            sql_query = sql_query + " LIMIT 1000"
+    
+    # Add query hints for PostgreSQL if appropriate
+    # For example, if we're doing a full table scan and we know there's an index
+    if 'where' in sql_lower and 'continent' in sql_lower:
+        # Add index hint for continent if it's in a WHERE clause
+        sql_query = sql_query.replace("FROM battery_data", 
+                                     "FROM battery_data /*+ IndexScan(battery_data idx_location) */")
     
     # Ensure proper ordering for better performance
-    if 'order by' not in sql_query.lower():
+    if 'order by' not in sql_lower:
         # If there's a GROUP BY clause, add ORDER BY after it
-        if 'group by' in sql_query.lower():
-            group_by_match = re.search(r'(group by[^;]*)', sql_query.lower())
+        if 'group by' in sql_lower:
+            group_by_match = re.search(r'(group by[^;]*)', sql_lower)
             if group_by_match:
                 group_by_clause = group_by_match.group(1)
-                columns = re.findall(r'group by\s+([^;\s]+)', group_by_clause.lower())
+                columns = re.findall(r'group by\s+([^;\s]+)', group_by_clause)
                 if columns:
                     # Insert ORDER BY after GROUP BY
-                    sql_query = re.sub(
-                        r'(group by[^;]*)', 
-                        f"\\1 ORDER BY {columns[0]}", 
-                        sql_query, 
-                        flags=re.IGNORECASE
-                    )
-    
-    # Add query timeout to prevent long-running queries (MySQL syntax)
-    if '/*+ max_execution_time' not in sql_query.lower():
-        sql_query = f"SELECT /*+ MAX_EXECUTION_TIME(5000) */ " + sql_query[7:]
+                    order_by_clause = f" ORDER BY {columns[0]}"
+                    # Find where to insert the ORDER BY clause
+                    if 'limit' in sql_lower:
+                        # Insert before LIMIT
+                        limit_pos = sql_lower.find('limit')
+                        sql_query = sql_query[:limit_pos] + order_by_clause + " " + sql_query[limit_pos:]
+                    else:
+                        # Append at the end
+                        sql_query += order_by_clause
     
     return sql_query
 
@@ -176,35 +203,124 @@ def audit_query(query_text, sql_query, user_ip):
         user_ip (str): The IP address of the user making the request.
     """
     try:
+        # Create logs directory if it doesn't exist
         log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
-            
+        
+        # Create a structured log entry with more information
+        timestamp = datetime.now(timezone.utc).isoformat()
+        log_entry = {
+            "timestamp": timestamp,
+            "user_ip": user_ip,
+            "query_text": query_text,
+            "sql_query": sql_query,
+            "user_agent": request.headers.get('User-Agent', 'Unknown'),
+            "request_id": request.headers.get('X-Request-ID', str(uuid.uuid4())),
+            "is_valid": validate_sql_query(sql_query)[0]
+        }
+        
+        # Write to JSON log file
         log_file = os.path.join(log_dir, 'ai_query_audit.log')
         with open(log_file, 'a') as f:
-            f.write(f"{datetime.now()} | {user_ip} | {query_text} | {sql_query}\n")
+            f.write(json.dumps(log_entry) + "\n")
+            
+        # Also log to application logger for centralized logging
+        current_app.logger.info(f"AI Query: {user_ip} | {query_text[:50]}... | Valid: {log_entry['is_valid']}")
+        
+        # If query is suspicious, log a warning
+        if not log_entry['is_valid'] or any(pattern in query_text.lower() for pattern in ['drop', 'delete', 'truncate', 'insert']):
+            current_app.logger.warning(f"Suspicious AI query detected: {user_ip} | {query_text}")
+            
     except Exception as e:
         current_app.logger.error(f"Error writing to audit log: {str(e)}")
+        # Don't let audit failures affect the main functionality
+        pass
 
 @ai_query_routes.route('/ai-query', methods=['POST'])
 def handle_ai_query():
+    """Handle AI-powered natural language to SQL query conversion.
+    
+    This endpoint accepts a natural language query, converts it to SQL using OpenAI,
+    validates the SQL for security, and executes it against the database.
+    
+    Request JSON format:
+        {
+            "query": "Natural language query string"
+        }
+    
+    Returns:
+        JSON response with query results or error message
+    """
     try:
+        # Check if request has JSON content
+        if not request.is_json:
+            return jsonify({'error': 'Request must be JSON'}), 400
+            
+        # Get client IP for rate limiting and auditing
+        client_ip = request.remote_addr
+        
+        # Get the query from the request
         data = request.get_json()
         query_text = data.get('query')
         
         if not query_text:
             return jsonify({'error': 'Missing query parameter'}), 400
         
-        # Generate and validate SQL
-        sql_query = generate_sql_from_natural_language(query_text)
+        # Check for obvious malicious queries before even sending to OpenAI
+        dangerous_keywords = ['drop', 'delete', 'truncate', 'insert', 'update', 'alter', 'create']
+        if any(keyword in query_text.lower() for keyword in dangerous_keywords):
+            # Audit the suspicious query
+            audit_query(query_text, "", client_ip)
+            return jsonify({'error': 'Query contains disallowed operations'}), 400
+        
+        # Generate SQL from natural language
+        try:
+            sql_query = generate_sql_from_natural_language(query_text)
+        except Exception as e:
+            current_app.logger.error(f"SQL generation error: {str(e)}")
+            return jsonify({'error': f'Failed to generate SQL query: {str(e)}'}), 400
+            
+        # Validate the generated SQL
         is_valid, validation_msg = validate_sql_query(sql_query)
+        
+        # Audit the query regardless of validity
+        audit_query(query_text, sql_query, client_ip)
         
         if not is_valid:
             return jsonify({'error': validation_msg}), 400
         
-        # Execute validated query
-        result = db_session.execute(sql_query).fetchall()
-        return jsonify({'data': [dict(row) for row in result]})
+        # Optimize the validated query
+        sql_query = optimize_sql_query(sql_query)
+        
+        # Execute the validated and optimized query
+        with db_session() as session:
+            try:
+                # Set a statement timeout for PostgreSQL
+                if 'postgresql' in str(session.bind.engine.url):
+                    session.execute(text("SET statement_timeout = 5000;"))  # 5 seconds timeout
+                
+                # Execute the query with a timeout
+                result = session.execute(text(sql_query)).fetchall()
+                
+                # Format the results
+                formatted_results = [dict(row) for row in result]
+                
+                # Add metadata to the response
+                execution_time = datetime.now(timezone.utc).isoformat()
+                response = {
+                    'data': formatted_results,
+                    'metadata': {
+                        'row_count': len(formatted_results),
+                        'sql_query': sql_query,
+                        'execution_time': execution_time
+                    }
+                }
+                
+                return jsonify(response)
+            except Exception as e:
+                current_app.logger.error(f"SQL execution error: {str(e)}")
+                return jsonify({'error': f'Failed to execute query: {str(e)}'}), 400
 
     except ValueError as e:
         return jsonify({'error': str(e)}), 400

@@ -104,15 +104,20 @@ def validate_dataframe(df: pd.DataFrame, required_columns: List[str]) -> bool:
     logger.info("DataFrame validation successful")
     return True
 
-def handle_error(error: Exception, context: str = "") -> None:
-    """Handle an error by logging it and optionally performing additional actions.
+def handle_error(context: str, error: Exception) -> bool:
+    """Handle errors in a consistent way across the application.
     
     Args:
-        error: The exception that occurred.
         context: Additional context about where the error occurred.
+        error: The exception that occurred.
+        
+    Returns:
+        bool: Always returns False to indicate an error occurred.
     """
-    error_message = f"{context}: {str(error)}" if context else str(error)
+    error_message = f"{str(error)}: {context}" if context else str(error)
     logger.error(f"Error occurred: {error_message}")
     
     # Additional error handling logic can be added here
     # For example, sending notifications, writing to error log files, etc.
+    
+    return False
