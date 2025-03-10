@@ -8,8 +8,8 @@ Abhängigkeiten:
 from flask import Blueprint, jsonify, request, current_app
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
-from database import db_session
-from models import BatteryData
+from backend.database import db_session
+from backend.models import BatteryData
 
 # Create a Blueprint for data routes
 data_routes = Blueprint('data_routes', __name__)

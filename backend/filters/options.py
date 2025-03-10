@@ -6,8 +6,8 @@ This module provides endpoints for retrieving filter options like countries, con
 from flask import Blueprint, jsonify
 from sqlalchemy import func, distinct
 from sqlalchemy.exc import SQLAlchemyError
-from database import db_session
-from models import BatteryData
+from backend.database import db_session
+from backend.models import BatteryData
 from .utils import create_cached_response, handle_db_error, handle_general_error
 
 # Create a Blueprint for filter options routes

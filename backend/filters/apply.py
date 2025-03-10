@@ -5,8 +5,8 @@ This module provides endpoints for applying complex filters to battery data.
 
 from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import SQLAlchemyError
-from database import db_session
-from models import BatteryData
+from backend.database import db_session
+from backend.models import BatteryData
 from .utils import handle_db_error, handle_general_error, validate_pagination_params
 
 # Create a Blueprint for filter application routes

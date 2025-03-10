@@ -7,7 +7,7 @@ Abhängigkeiten:
 
 import os
 from sqlalchemy import create_engine, text
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import SQLAlchemyError
 from flask import current_app
@@ -21,51 +21,27 @@ engine = None
 Session = None
 
 def init_db(app):
-    """Initialize the database connection.
-    
-    Args:
-        app: Flask application instance with configuration.
-    """
     global engine, Session
     
-    # Validate database configuration
-    database_uri = app.config.get('SQLALCHEMY_DATABASE_URI', app.config.get('DATABASE_URI'))
-    if not database_uri:
-        raise ValueError("Missing database configuration")
+    database_uri = app.config.get('SQLALCHEMY_DATABASE_URI')
     
-    # Create database engine with connection pooling and security settings
-    connect_args = {}
-    
-    # Add SSL configuration if in production
-    if app.config.get('FLASK_ENV') == 'production':
-        connect_args.update({
-            'sslmode': 'require',
-            'connect_timeout': 10
+    # Only use pooling for PostgreSQL
+    engine_args = {}
+    if 'postgresql' in database_uri:
+        engine_args.update({
+            'pool_size': 20,
+            'max_overflow': 10,
+            'pool_timeout': 30
         })
     
-    # Create engine with proper connection pooling
     engine = create_engine(
         database_uri,
-        pool_size=20,
-        max_overflow=10,
-        pool_recycle=3600,  # Recycle connections after 1 hour
-        pool_pre_ping=True,  # Verify connections before using them
-        pool_timeout=30,     # Connection timeout
-        connect_args=connect_args
+        **engine_args
     )
-    
-    # Create session factory with proper configuration
-    session_factory = sessionmaker(
-        bind=engine,
-        autocommit=False,
-        autoflush=False,
-        expire_on_commit=False  # Don't expire objects after commit
-    )
-    
-    Session = scoped_session(session_factory)
+    Session = scoped_session(sessionmaker(bind=engine))
     
     # Import models to ensure they are registered with the Base
-    from models import BatteryData
+    from .models import BatteryData
     
     return engine
 

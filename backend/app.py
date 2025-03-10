@@ -14,9 +14,10 @@ from dotenv import load_dotenv
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
-from database import init_db, get_db_session
-from data_routes import data_routes
-from ai_query import ai_query_routes
+from .database import init_db, get_db_session
+from .models import BatteryData
+from .data_routes import data_routes
+from .ai_query import ai_query_routes
 
 # Load environment variables from .env file
 load_dotenv()
@@ -71,7 +72,7 @@ def create_app(test_config=None):
     init_db(app)
     
     # Register CLI commands for database operations
-    from init_db import register_cli_commands
+    from .init_db import register_cli_commands
     register_cli_commands(app)
     
     # Set up periodic database refresh if configured
@@ -79,40 +80,10 @@ def create_app(test_config=None):
         from init_db import schedule_periodic_refresh
         schedule_periodic_refresh(app)
     
-    # Register blueprints for API routes with correct URL prefixes
-    app.register_blueprint(data_routes, url_prefix='/api/data')
-    # Verify Blueprint registration was updated from:
-    # Remove this outdated registration:
-    # app.register_blueprint(filter_routes, url_prefix='/api/filter')
-    
-    # To:
-    from filters.options import filter_options_bp
-    app.register_blueprint(filter_options_bp, url_prefix='/api/filter')
-    app.register_blueprint(ai_query_routes, url_prefix='/api/ai-query')
-    
-    # Initialize rate limiter
-    limiter = Limiter(
-        app=app,
-        key_func=get_remote_address,
-        default_limits=["200 per day", "50 per hour"]
-    )
-    
-    # Initialize cache
-    cache = Cache(app, config={
-        'CACHE_TYPE': 'SimpleCache',
-        'CACHE_DEFAULT_TIMEOUT': 3600  # 1 hour default timeout
-    })
-    
-    # Replace the placeholder cache decorator in data_routes
-    from data_routes import cache_decorator
-    data_routes.cache_decorator = cache.cached(timeout=3600)  # Cache for 1 hour
-    
-    # Validate JSON requests
-    @app.before_request
-    def validate_json():
-        if request.method in ('POST', 'PUT') and request.is_json == False and request.content_type and 'application/json' in request.content_type:
-            return jsonify({'error': 'Content-Type must be application/json'}), 415
-    
+    # Register blueprints with URL prefixes
+    app.register_blueprint(data_routes, url_prefix='/api')
+    app.register_blueprint(ai_query_routes, url_prefix='/api')
+
     # Error handling
     @app.errorhandler(404)
     def not_found(error):

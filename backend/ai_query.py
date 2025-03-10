@@ -12,8 +12,8 @@ import openai
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
 from sqlalchemy.exc import SQLAlchemyError
-from database import db_session
-from models import BatteryData
+from .database import db_session
+from .models import BatteryData
 
 # Create a Blueprint for AI query routes
 ai_query_routes = Blueprint('ai_query_routes', __name__)
@@ -187,93 +187,27 @@ def audit_query(query_text, sql_query, user_ip):
         current_app.logger.error(f"Error writing to audit log: {str(e)}")
 
 @ai_query_routes.route('/ai-query', methods=['POST'])
-def ai_query():
-    """Handle natural language queries and convert them to SQL.
-    
-    Request body:
-        query (str): Natural language query from the user.
-        
-    Returns:
-        JSON response with query results or error message.
-    """
+def handle_ai_query():
     try:
-        # Get the natural language query from the request
         data = request.get_json()
-        if not data or 'query' not in data:
-            return jsonify({
-                'error': 'Missing query parameter',
-                'status': 'error'
-            }), 400
+        query_text = data.get('query')
         
-        query_text = data['query']
+        if not query_text:
+            return jsonify({'error': 'Missing query parameter'}), 400
         
-        # Input validation
-        if len(query_text) > 500:
-            return jsonify({
-                'error': 'Query too long. Maximum length is 500 characters.',
-                'status': 'error'
-            }), 400
-            
-        # Basic character validation - allow letters, numbers, common punctuation and spaces
-        if not re.match(r'^[a-zA-Z0-9äöüÄÖÜß \-,.?!()]+$', query_text):
-            return jsonify({
-                'error': 'Invalid characters in query',
-                'status': 'error'
-            }), 400
-        
-        # Generate SQL from natural language
+        # Generate and validate SQL
         sql_query = generate_sql_from_natural_language(query_text)
+        is_valid, validation_msg = validate_sql_query(sql_query)
         
-        # Validate the SQL query
-        is_valid, result = validate_sql_query(sql_query)
         if not is_valid:
-            return jsonify({
-                'error': result,
-                'status': 'error'
-            }), 400
+            return jsonify({'error': validation_msg}), 400
         
-        # Optimize the validated SQL query
-        optimized_sql = optimize_sql_query(result)
-        
-        # Log the query for auditing
-        user_ip = request.remote_addr
-        audit_query(query_text, optimized_sql, user_ip)
-        
-        # Execute the query
-        with db_session() as session:
-            # Use SQLAlchemy's text() to execute raw SQL
-            from sqlalchemy import text
-            result_proxy = session.execute(text(optimized_sql))
-            
-            # Convert result to a list of dictionaries
-            column_names = result_proxy.keys()
-            results = [dict(zip(column_names, row)) for row in result_proxy.fetchall()]
-            
-            # Return the results along with the generated SQL for transparency
-            return jsonify({
-                'results': results,
-                'generated_sql': optimized_sql,
-                'status': 'success',
-                'count': len(results)
-            })
-    
+        # Execute validated query
+        result = db_session.execute(sql_query).fetchall()
+        return jsonify({'data': [dict(row) for row in result]})
+
     except ValueError as e:
-        # Handle configuration errors
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
-    
-    except SQLAlchemyError as e:
-        # Handle database errors
-        return jsonify({
-            'error': f"Database error: {str(e)}",
-            'status': 'error'
-        }), 500
-    
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
-        # Handle all other errors
-        return jsonify({
-            'error': f"An error occurred: {str(e)}",
-            'status': 'error'
-        }), 500
+        current_app.logger.error(f"AI query error: {str(e)}")
+        return jsonify({'error': 'Failed to process query'}), 500

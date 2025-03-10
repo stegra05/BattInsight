@@ -10,9 +10,9 @@ import pandas as pd
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 
-from utils import read_csv_file, clean_dataframe, validate_dataframe, handle_error
-from models import BatteryData
-from database import db_session
+from .utils import read_csv_file, clean_dataframe, validate_dataframe, handle_error
+from .models import BatteryData
+from .database import db_session
 
 # Configure logging
 logging.basicConfig(

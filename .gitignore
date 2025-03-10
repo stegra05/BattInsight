@@ -9,3 +9,4 @@ Dockerfile
 venv/
 *.sqlite3
 *.db
+battinsight.egg-info/

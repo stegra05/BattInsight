@@ -7,14 +7,15 @@ Abhängigkeiten:
 import os
 import logging
 import argparse
+import click
 import hashlib
 from flask import Flask, current_app
 from pathlib import Path
 from datetime import datetime
 
-from database import init_db as init_database, create_tables, drop_tables, db_session, get_db_session
-from data_processor import process_and_import_data
-from utils import handle_error
+from .database import init_db as init_database, create_tables, drop_tables, db_session, get_db_session
+from .data_processor import process_and_import_data
+from .utils import handle_error
 
 # Configure logging
 logging.basicConfig(
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 # Create a metadata table to track import information
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table
-from database import Base
+from .database import Base
 
 class ImportMetadata(Base):
     """SQLAlchemy model for tracking import metadata."""
@@ -288,13 +289,12 @@ def main():
 
 # Add Flask CLI commands
 def register_cli_commands(app):
-    """Register CLI commands with the Flask application.
-    
-    Args:
-        app: Flask application instance.
-    """
-    import click
-    
+    @app.cli.command('init-db')
+    def init_db_command():
+        """Initialize the database"""
+        init_database(current_app)
+        print('Database initialized')
+
     @app.cli.command("init-db")
     @click.option("--csv", help="Path to the CSV file to import")
     @click.option("--force", is_flag=True, help="Drop existing tables before creating new ones")

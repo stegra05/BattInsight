@@ -6,7 +6,7 @@ Abhängigkeiten:
 
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Index, CheckConstraint, Text, DateTime, func
 from sqlalchemy.orm import relationship, validates
-from database import Base
+from .database import Base
 from datetime import datetime
 
 class ModelSeries(Base):
@@ -16,7 +16,6 @@ class ModelSeries(Base):
     fields like series_name and release_year.
     """
     __tablename__ = 'model_series'
-    __table_args__ = {'schema': 'public'}
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     series_name = Column(String(50), unique=True, nullable=False)
@@ -46,8 +45,7 @@ class BatteryData(Base):
         Index('idx_val_range', 'var', 'val'),
         Index('idx_location', 'country', 'continent', 'climate'),
         CheckConstraint('val >= 0 AND val <= 1000', name='chk_val_range'),
-        CheckConstraint('cnt_vhcl > 0', name='chk_cnt_vhcl_positive'),
-        {'schema': 'public'}
+        CheckConstraint('cnt_vhcl > 0', name='chk_cnt_vhcl_positive')
     )
     
     # Primary key and basic fields
@@ -59,7 +57,7 @@ class BatteryData(Base):
     iso_a3 = Column(String(3), nullable=True, index=True)
     
     # Foreign key relationship for model_series
-    model_series_id = Column(Integer, ForeignKey('public.model_series.id'), index=True)
+    model_series_id = Column(Integer, ForeignKey('model_series.id'), index=True)
     model = relationship("ModelSeries", back_populates="batteries")
     
     # Keep the original model_series column for backward compatibility
