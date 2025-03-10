@@ -5,13 +5,20 @@ Abhängigkeiten:
 	•	Verwendet database.py und models.py zur Ausführung von Abfragen.
 """
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 from database import db_session
 from models import BatteryData
 
 # Create a Blueprint for data routes
 data_routes = Blueprint('data_routes', __name__)
+
+# Placeholder for cache decorator that will be replaced in app.py
+def cache_decorator(timeout=3600):
+    def decorator(f):
+        return f
+    return decorator
 
 @data_routes.route('/data', methods=['GET'])
 def get_data():

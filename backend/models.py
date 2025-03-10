@@ -43,11 +43,11 @@ class BatteryData(Base):
     """
     __tablename__ = 'battery_data'
     __table_args__ = (
-        {'schema': 'public'},
         Index('idx_val_range', 'var', 'val'),
         Index('idx_location', 'country', 'continent', 'climate'),
         CheckConstraint('val >= 0 AND val <= 1000', name='chk_val_range'),
-        CheckConstraint('cnt_vhcl > 0', name='chk_cnt_vhcl_positive')
+        CheckConstraint('cnt_vhcl > 0', name='chk_cnt_vhcl_positive'),
+        {'schema': 'public'}
     )
     
     # Primary key and basic fields

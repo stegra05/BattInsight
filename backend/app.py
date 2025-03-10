@@ -16,7 +16,6 @@ from flask_limiter.util import get_remote_address
 from flask_caching import Cache
 from database import init_db, get_db_session
 from data_routes import data_routes
-from filter_routes import filter_routes
 from ai_query import ai_query_routes
 
 # Load environment variables from .env file
@@ -83,7 +82,8 @@ def create_app(test_config=None):
     # Register blueprints for API routes with correct URL prefixes
     app.register_blueprint(data_routes, url_prefix='/api/data')
     # Verify Blueprint registration was updated from:
-    app.register_blueprint(filter_routes, url_prefix='/api/filter')
+    # Remove this outdated registration:
+    # app.register_blueprint(filter_routes, url_prefix='/api/filter')
     
     # To:
     from filters.options import filter_options_bp
@@ -123,9 +123,9 @@ def create_app(test_config=None):
         return jsonify({'error': 'Internal server error'}), 500
     
     # Health check endpoint
-    @app.route('/health')
-    def health_check():
-        return jsonify({'status': 'healthy'})
+    @app.route('/healthcheck', methods=['GET'])
+    def healthcheck():
+        return jsonify({'status': 'healthy', 'version': '1.0.0'})
     
     return app
 

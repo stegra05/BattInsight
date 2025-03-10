@@ -1,0 +1,22 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first to leverage Docker cache
+COPY backend/requirements.txt .
+# Fix pip command (use pip instead of pip3)
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY backend/ /app/
+COPY .env /app/
+
+EXPOSE 5000
+# Ensure host is set to 0.0.0.0 to allow external connections
+CMD ["flask", "run", "--host=0.0.0.0"]

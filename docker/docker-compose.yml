@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    environment:
+      - DATABASE_URI=postgresql://postgres:postgres@postgres:5432/battinsight
+      - SECRET_KEY=${SECRET_KEY}
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres  # Changed from db to match service name below
+
+  postgres:  # Previously named 'db'
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
