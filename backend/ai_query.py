@@ -9,6 +9,7 @@ import os
 import re
 import json
 import openai
+from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
 from sqlalchemy.exc import SQLAlchemyError
 from database import db_session
@@ -58,6 +59,8 @@ def generate_sql_from_natural_language(query_text):
         
         Generate a valid SQL query that can be executed against this schema.
         Only return the SQL query without any explanations or markdown formatting.
+        Do not use wildcard (*) selects - always specify column names explicitly.
+        Do not use JOIN operations.
         """
         
         # Call the OpenAI API to generate SQL
@@ -94,7 +97,7 @@ def validate_sql_query(sql_query):
     # Convert to lowercase for easier pattern matching
     sql_lower = sql_query.lower()
     
-    # Check for dangerous SQL operations
+    # Check for dangerous SQL operations with case-insensitive flag
     dangerous_patterns = [
         r'\bdelete\b', r'\bdrop\b', r'\btruncate\b', r'\balter\b', 
         r'\bcreate\b', r'\binsert\b', r'\bupdate\b', r'\bmerge\b',
@@ -102,15 +105,23 @@ def validate_sql_query(sql_query):
     ]
     
     for pattern in dangerous_patterns:
-        if re.search(pattern, sql_lower):
+        if re.search(pattern, sql_query, re.IGNORECASE):
             return False, f"Dangerous SQL operation detected: {pattern}"
     
     # Ensure the query is a SELECT statement
     if not sql_lower.strip().startswith('select'):
         return False, "Only SELECT queries are allowed"
     
+    # Check for JOIN operations
+    if re.search(r'\bjoin\b', sql_query, re.IGNORECASE):
+        return False, "JOIN operations are not permitted"
+    
+    # Check for wildcard selects
+    if re.search(r'select\s+\*', sql_lower):
+        return False, "Wildcard selects are not allowed. Specify columns explicitly."
+    
     # Ensure the query only accesses the battery_data table
-    tables = re.findall(r'\bfrom\s+([\w_]+)', sql_lower)
+    tables = re.findall(r'\bfrom\s+([\w_]+)\b', sql_lower)
     for table in tables:
         if table != 'battery_data':
             return False, f"Access to table '{table}' is not allowed"
@@ -150,7 +161,30 @@ def optimize_sql_query(sql_query):
                         flags=re.IGNORECASE
                     )
     
+    # Add query timeout to prevent long-running queries (MySQL syntax)
+    if '/*+ max_execution_time' not in sql_query.lower():
+        sql_query = f"SELECT /*+ MAX_EXECUTION_TIME(5000) */ " + sql_query[7:]
+    
     return sql_query
+
+def audit_query(query_text, sql_query, user_ip):
+    """Log query information for auditing purposes.
+    
+    Args:
+        query_text (str): The original natural language query.
+        sql_query (str): The generated SQL query.
+        user_ip (str): The IP address of the user making the request.
+    """
+    try:
+        log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+            
+        log_file = os.path.join(log_dir, 'ai_query_audit.log')
+        with open(log_file, 'a') as f:
+            f.write(f"{datetime.now()} | {user_ip} | {query_text} | {sql_query}\n")
+    except Exception as e:
+        current_app.logger.error(f"Error writing to audit log: {str(e)}")
 
 @ai_query_routes.route('/ai-query', methods=['POST'])
 def ai_query():
@@ -173,6 +207,20 @@ def ai_query():
         
         query_text = data['query']
         
+        # Input validation
+        if len(query_text) > 500:
+            return jsonify({
+                'error': 'Query too long. Maximum length is 500 characters.',
+                'status': 'error'
+            }), 400
+            
+        # Basic character validation - allow letters, numbers, common punctuation and spaces
+        if not re.match(r'^[a-zA-Z0-9äöüÄÖÜß \-,.?!()]+$', query_text):
+            return jsonify({
+                'error': 'Invalid characters in query',
+                'status': 'error'
+            }), 400
+        
         # Generate SQL from natural language
         sql_query = generate_sql_from_natural_language(query_text)
         
@@ -186,6 +234,10 @@ def ai_query():
         
         # Optimize the validated SQL query
         optimized_sql = optimize_sql_query(result)
+        
+        # Log the query for auditing
+        user_ip = request.remote_addr
+        audit_query(query_text, optimized_sql, user_ip)
         
         # Execute the query
         with db_session() as session:
