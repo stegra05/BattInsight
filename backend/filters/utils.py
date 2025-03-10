@@ -8,8 +8,8 @@ Abhängigkeiten:
 from flask import jsonify, current_app
 from functools import wraps
 from sqlalchemy.exc import SQLAlchemyError
-from database import db_session
-from models import BatteryData
+from ..database import db_session
+from ..models import BatteryData
 
 
 def create_cached_response(data, cache_time=3600):

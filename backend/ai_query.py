@@ -12,7 +12,7 @@ import openai
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, current_app
 from sqlalchemy.exc import SQLAlchemyError
-from database import db_session
+from .database import db_session
 import uuid
 from sqlalchemy import text
 

@@ -6,7 +6,7 @@ This module provides endpoints for retrieving filter options like countries, con
 from flask import Blueprint, jsonify, request
 from sqlalchemy import func, distinct
 from sqlalchemy.exc import SQLAlchemyError
-from database import db_session
+from ..database import db_session
 from .utils import create_cached_response, handle_db_error, handle_general_error
 
 # Create a Blueprint for filter options routes
@@ -22,7 +22,7 @@ def get_filter_options():
     """
     try:
         # Import BatteryData here to avoid circular imports
-        from models import BatteryData
+        from ..models import BatteryData
         
         with db_session() as session:
             # Get all distinct values for each filter category
@@ -92,7 +92,7 @@ def get_countries():
     """
     try:
         # Import BatteryData here to avoid circular imports
-        from models import BatteryData
+        from ..models import BatteryData
         
         with db_session() as session:
             # Query distinct countries and their ISO A3 codes with timeout
@@ -128,7 +128,7 @@ def get_continents():
     """
     try:
         # Import BatteryData here to avoid circular imports
-        from models import BatteryData
+        from ..models import BatteryData
         
         with db_session() as session:
             # Query distinct continents with timeout
@@ -154,7 +154,7 @@ def get_climates():
     """
     try:
         # Import BatteryData here to avoid circular imports
-        from models import BatteryData
+        from ..models import BatteryData
         
         with db_session() as session:
             # Query distinct climate types with timeout
@@ -180,7 +180,7 @@ def get_model_series():
     """
     try:
         # Import BatteryData here to avoid circular imports
-        from models import BatteryData
+        from ..models import BatteryData
         
         with db_session() as session:
             # Query distinct model series with timeout
@@ -206,7 +206,7 @@ def get_variables():
     """
     try:
         # Import BatteryData here to avoid circular imports
-        from models import BatteryData
+        from ..models import BatteryData
         
         with db_session() as session:
             # Query distinct variables and their descriptions with timeout

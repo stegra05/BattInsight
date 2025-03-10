@@ -14,12 +14,12 @@ from dotenv import load_dotenv
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
-from database import init_db, get_db_session
+from .database import init_db, get_db_session
 # Remove the top-level import of BatteryData
 # from models import BatteryData
-from data_routes import data_routes
-from ai_query import ai_query_routes
-from filters import filter_routes, setup_rate_limiting
+from .data_routes import data_routes
+from .ai_query import ai_query_routes
+from .filters import filter_routes, setup_rate_limiting
 
 # Load environment variables from .env file
 load_dotenv()

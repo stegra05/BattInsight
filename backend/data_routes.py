@@ -8,7 +8,7 @@ Abhängigkeiten:
 from flask import Blueprint, jsonify, request, current_app
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
-from database import db_session
+from .database import db_session
 # Remove the top-level import of BatteryData
 # from models import BatteryData
 

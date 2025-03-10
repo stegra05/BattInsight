@@ -6,7 +6,7 @@ This module provides OpenAPI documentation and rate limiting for filter routes.
 from flask import Blueprint, jsonify, request, current_app
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from database import db_session
+from backend.database import db_session
 # Remove the top-level import of BatteryData
 # from models import BatteryData
 

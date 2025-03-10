@@ -6,7 +6,7 @@ Abhängigkeiten:
 
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Index, CheckConstraint, Text, DateTime, func
 from sqlalchemy.orm import relationship, validates
-from database import Base
+from .base import Base
 from datetime import datetime
 
 class ModelSeries(Base):

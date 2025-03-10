@@ -3,8 +3,9 @@ from unittest.mock import Mock, patch
 from backend.app import create_app
 from backend.database import db_session, init_db, engine
 from backend.models import BatteryData
-import os  # Add this import to fix the missing import error
-from sqlalchemy import text  # Import text to wrap raw SQL queries
+import os
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 @pytest.fixture(scope='session')  # Session-scoped for reuse
 def app():
@@ -112,7 +113,7 @@ def test_data_endpoint_basic(client):
 @pytest.mark.parametrize("filters,expected_count", [
     ({'continent': 'Europe'}, 50),
     ({'climate': 'Temperate'}, 40),
-    ({'model_series': 'X300'}, 50),
+    ({'model_series_id': 1}, 50),
     ({'val_min': 75, 'val_max': 125}, 50)
 ])
 def test_data_filtering(client, filters, expected_count):
@@ -124,10 +125,12 @@ def test_data_filtering(client, filters, expected_count):
             assert item['continent'] == filters['continent']
         if 'climate' in filters:
             assert item['climate'] == filters['climate']
+        if 'model_series_id' in filters:
+            assert item['model_series_id'] == filters['model_series_id']
 
 
 def test_database_schema_integrity(db_session):
-    from backend.models import BatteryData
+    from ..models import BatteryData
     from sqlalchemy import inspect
     from backend.database import engine
     
@@ -142,22 +145,25 @@ def test_database_schema_integrity(db_session):
     
     expected_columns = [
         'id', 'batt_alias', 'country', 'continent',
-        'climate', 'iso_a3', 'model_series', 'var',
+        'climate', 'iso_a3', 'model_series_id', 'var',
         'val', 'descr', 'cnt_vhcl'
     ]
     assert set(column_names) == set(expected_columns)
     
     # Verify constraints - only for PostgreSQL
     if 'postgresql' in str(engine.url):
+        foreign_keys = inspector.get_foreign_keys('battery_data')
+        assert any(fk['referred_table'] == 'model_series' for fk in foreign_keys)
         table_constraints = inspector.get_check_constraints('battery_data')
         assert any(c['sqltext'] == 'val >= 0' for c in table_constraints)
-        assert any(c['sqltext'] == 'val <= 100' for c in table_constraints)
+        assert any(c['sqltext'] == 'val <= 1000' for c in table_constraints)
+        assert any(c['sqltext'] == 'cnt_vhcl > 0' for c in table_constraints)
 
 @pytest.mark.parametrize("malicious_query", [
     "DROP TABLE battery_data;",
     "SELECT * FROM users;",
-    "DELETE FROM battery_data WHERE 1=1--",
-    "SELECT * FROM battery_data UNION SELECT * FROM users"
+    "1; SELECT model_series_id FROM battery_data",
+    "DELETE FROM battery_data WHERE model_series_id = 1"
 ])
 def test_ai_query_security(client, malicious_query):
     response = client.post('/api/ai-query',
@@ -214,3 +220,31 @@ def test_database_connection(db_session):
         # For SQLite, just verify we can execute a query
         result = db_session.execute(text("SELECT 1")).scalar()
         assert result == 1
+
+def test_constraint_violations(db_session):
+    from ..models import BatteryData
+    
+    invalid_battery = BatteryData(
+        batt_alias='INVALID',
+        val=-5,
+        cnt_vhcl=0,
+        var='test'
+    )
+    with pytest.raises(ValueError):
+        db_session.add(invalid_battery)
+        db_session.commit()
+    # Test foreign key constraint
+    invalid_fk = BatteryData(
+        batt_alias='FK_TEST',
+        var='capacity',
+        val=100,
+        model_series_id=999
+    )
+    with pytest.raises(IntegrityError):
+        db_session.add(invalid_fk)
+        db_session.commit()
+    # Test filter performance with index
+    start = time.time()
+    response = client.get('/api/data', query_string={'model_series_id': 1})
+    assert response.status_code == 200
+    assert time.time() - start < 0.1

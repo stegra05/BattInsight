@@ -9,9 +9,10 @@ import os
 import logging
 from contextlib import contextmanager
 from sqlalchemy import create_engine, event
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 from dotenv import load_dotenv
+from backend.base import Base
 
 # Load environment variables from .env file
 load_dotenv()
