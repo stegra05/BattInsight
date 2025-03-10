@@ -121,8 +121,13 @@ def get_data():
                 }
             })
     
+    except SQLAlchemyError as e:
+        # Fix 5: Structured error logging and hiding raw DB errors
+        current_app.logger.error(f"Database error in get_data_stats: {str(e)}")
+        return jsonify({'error': 'Database operation failed'}), 500
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Unexpected error in get_data_stats: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @data_routes.route('/data/stats', methods=['GET'])
 def get_data_stats():
@@ -172,5 +177,10 @@ def get_data_stats():
                 }
             })
     
+    except SQLAlchemyError as e:
+        # Fix 5: Structured error logging and hiding raw DB errors
+        current_app.logger.error(f"Database error in get_data_stats: {str(e)}")
+        return jsonify({'error': 'Database operation failed'}), 500
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Unexpected error in get_data_stats: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500

@@ -13,6 +13,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_caching import Cache
 from database import init_db, get_db_session
 from data_routes import data_routes
 from filter_routes import filter_routes
@@ -81,6 +82,16 @@ def create_app(test_config=None):
         key_func=get_remote_address,
         default_limits=["200 per day", "50 per hour"]
     )
+    
+    # Initialize cache
+    cache = Cache(app, config={
+        'CACHE_TYPE': 'SimpleCache',
+        'CACHE_DEFAULT_TIMEOUT': 3600  # 1 hour default timeout
+    })
+    
+    # Replace the placeholder cache decorator in data_routes
+    from data_routes import cache_decorator
+    data_routes.cache_decorator = cache.cached(timeout=3600)  # Cache for 1 hour
     
     # Validate JSON requests
     @app.before_request
