@@ -3,18 +3,17 @@
 This module provides endpoints for retrieving filter options like countries, continents, etc.
 """
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from sqlalchemy import func, distinct
 from sqlalchemy.exc import SQLAlchemyError
-from backend.database import db_session
-from backend.models import BatteryData
+from database import db_session
 from .utils import create_cached_response, handle_db_error, handle_general_error
 
 # Create a Blueprint for filter options routes
 filter_options_bp = Blueprint('filter_options', __name__)
 
 
-@filter_options_bp.route('/options', methods=['GET'])
+@filter_options_bp.route('/', methods=['GET'])
 def get_filter_options():
     """Get all available filter options for the battery data.
     
@@ -22,6 +21,9 @@ def get_filter_options():
         JSON response with all possible filter values for each filter category
     """
     try:
+        # Import BatteryData here to avoid circular imports
+        from models import BatteryData
+        
         with db_session() as session:
             # Get all distinct values for each filter category
             batt_aliases = [alias[0] for alias in session.query(distinct(BatteryData.batt_alias))
@@ -89,6 +91,9 @@ def get_countries():
         JSON response with countries and their ISO A3 codes
     """
     try:
+        # Import BatteryData here to avoid circular imports
+        from models import BatteryData
+        
         with db_session() as session:
             # Query distinct countries and their ISO A3 codes with timeout
             countries_data = session.query(
@@ -122,6 +127,9 @@ def get_continents():
         JSON response with continents
     """
     try:
+        # Import BatteryData here to avoid circular imports
+        from models import BatteryData
+        
         with db_session() as session:
             # Query distinct continents with timeout
             continents = [continent[0] for continent in session.query(distinct(BatteryData.continent))
@@ -145,6 +153,9 @@ def get_climates():
         JSON response with climate types
     """
     try:
+        # Import BatteryData here to avoid circular imports
+        from models import BatteryData
+        
         with db_session() as session:
             # Query distinct climate types with timeout
             climates = [climate[0] for climate in session.query(distinct(BatteryData.climate))
@@ -168,6 +179,9 @@ def get_model_series():
         JSON response with model series
     """
     try:
+        # Import BatteryData here to avoid circular imports
+        from models import BatteryData
+        
         with db_session() as session:
             # Query distinct model series with timeout
             model_series = [series[0] for series in session.query(distinct(BatteryData.model_series))
@@ -191,6 +205,9 @@ def get_variables():
         JSON response with variables and their descriptions
     """
     try:
+        # Import BatteryData here to avoid circular imports
+        from models import BatteryData
+        
         with db_session() as session:
             # Query distinct variables and their descriptions with timeout
             var_data = session.query(

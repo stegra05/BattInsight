@@ -1,116 +1,81 @@
 """Ziel & Funktion:
-	•	Baut die Verbindung zur PostgreSQL-Datenbank auf und stellt Funktionen zur Verwaltung von Datenbank-Sessions bereit.
-	•	Wird als zentraler Punkt für alle datenbankbezogenen Operationen genutzt.
+	•	Stellt die Verbindung zur PostgreSQL-Datenbank her.
+	•	Definiert die Datenbankverbindung und Session-Handling.
 Abhängigkeiten:
-	•	Wird von fast allen anderen Backend-Modulen (z. B. app.py, init_db.py, ai_query.py) importiert.
+	•	Wird von allen Modulen verwendet, die auf die Datenbank zugreifen müssen.
 """
 
 import os
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.exc import SQLAlchemyError
-from flask import current_app
+import logging
 from contextlib import contextmanager
+from sqlalchemy import create_engine, event
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import scoped_session, sessionmaker
+from dotenv import load_dotenv
 
-# Create a base class for declarative class definitions
+# Load environment variables from .env file
+load_dotenv()
+
+# Create a base class for declarative models
 Base = declarative_base()
 
-# Global variables for engine and session factory
-engine = None
-Session = None
+# Create a database engine
+engine = create_engine(
+    os.environ.get('DATABASE_URI', 'postgresql://postgres:postgres@localhost:5432/battinsight'),
+    pool_pre_ping=True,  # Enable connection health checks
+    pool_recycle=3600,   # Recycle connections after 1 hour
+    echo=False           # Set to True for SQL query logging
+)
 
+# Create a session factory
+Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Create a thread-local session registry
+db_session = scoped_session(Session)
+
+# Initialize the database
 def init_db(app):
-    global engine, Session
+    """Initialize the database with the application context."""
+    # Import models here to avoid circular imports
+    import models
     
-    database_uri = app.config.get('SQLALCHEMY_DATABASE_URI')
+    # Create tables if they don't exist
+    Base.metadata.create_all(bind=engine)
     
-    # Only use pooling for PostgreSQL
-    engine_args = {}
-    if 'postgresql' in database_uri:
-        engine_args.update({
-            'pool_size': 20,
-            'max_overflow': 10,
-            'pool_timeout': 30
-        })
-    
-    engine = create_engine(
-        database_uri,
-        **engine_args
-    )
-    Session = scoped_session(sessionmaker(bind=engine))
-    
-    # Import models to ensure they are registered with the Base
-    from .models import BatteryData
-    
-    return engine
-
-def get_db_session():
-    """Get a database session.
-    
-    Returns:
-        SQLAlchemy session object.
-    """
-    if Session is None:
-        raise RuntimeError("Database not initialized. Call init_db first.")
-    return Session()
+    # Register teardown context
+    @app.teardown_appcontext
+    def shutdown_session(exception=None):
+        db_session.remove()
 
 @contextmanager
-def db_session():
-    """Context manager for database sessions.
-    
-    Yields:
-        SQLAlchemy session object.
-    """
-    session = get_db_session()
+def get_db_session():
+    """Get a database session with automatic cleanup."""
+    session = Session()
     try:
         yield session
         session.commit()
     except Exception as e:
         session.rollback()
-        # Log the error with context if we have access to the Flask app
-        try:
-            current_app.logger.error(f"Database error: {str(e)}", exc_info=True)
-        except RuntimeError:
-            # If we're outside of application context, just pass
-            pass
-        raise
+        raise e
     finally:
         session.close()
-        # Clear the scoped session to prevent resource leaks
-        Session.remove()
 
 def create_tables():
     """Create all tables defined in the models."""
-    if engine is None:
-        raise RuntimeError("Database not initialized. Call init_db first.")
+    import models  # Import models here to ensure they are registered with Base
     Base.metadata.create_all(engine)
 
 def drop_tables():
     """Drop all tables defined in the models."""
-    if engine is None:
-        raise RuntimeError("Database not initialized. Call init_db first.")
+    import models  # Import models here to ensure they are registered with Base
     Base.metadata.drop_all(engine)
 
 def check_db_connection():
-    """Check if the database connection is healthy.
-    
-    Returns:
-        bool: True if connection is healthy, False otherwise.
-    """
-    if engine is None:
-        return False
-        
+    """Check if the database connection is working."""
     try:
-        # Execute a simple query to check connection
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
+        with get_db_session() as session:
+            session.execute("SELECT 1")
         return True
-    except SQLAlchemyError as e:
-        # Log the error if we have access to the Flask app
-        try:
-            current_app.logger.error(f"Database connection check failed: {str(e)}", exc_info=True)
-        except RuntimeError:
-            # If we're outside of application context, just pass
-            pass
+    except Exception as e:
+        logging.error(f"Database connection check failed: {e}")
         return False

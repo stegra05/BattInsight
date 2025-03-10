@@ -1,21 +1,23 @@
 """Ziel & Funktion:
-	•	Initialisiert die Datenbank: Erstellt die benötigten Tabellen (sofern nicht vorhanden) und führt den CSV-Datenimport durch.
+	•	Initialisiert die Datenbank und erstellt die Tabellen.
+	•	Stellt Funktionen bereit, um die Datenbank zu leeren und neu zu befüllen.
 Abhängigkeiten:
-	•	Arbeitet mit database.py für die DB-Verbindung, models.py für die Tabellenstruktur und data_processor.py zur Datenverarbeitung.
+	•	Verwendet database.py für die Datenbankverbindung und models.py für die Tabellendefinitionen.
 """
 
 import os
 import logging
 import argparse
 import click
-import hashlib
+from datetime import datetime
 from flask import Flask, current_app
 from pathlib import Path
-from datetime import datetime
+from flask.cli import with_appcontext
 
-from .database import init_db as init_database, create_tables, drop_tables, db_session, get_db_session
-from .data_processor import process_and_import_data
-from .utils import handle_error
+from database import init_db as init_database, create_tables, drop_tables, db_session, get_db_session
+from models import BatteryData, ModelSeries
+from data_processor import process_and_import_data
+from utils import handle_error
 
 # Configure logging
 logging.basicConfig(
@@ -26,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 # Create a metadata table to track import information
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table
-from .database import Base
+from database import Base
 
 class ImportMetadata(Base):
     """SQLAlchemy model for tracking import metadata."""

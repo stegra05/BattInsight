@@ -14,10 +14,12 @@ from dotenv import load_dotenv
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
-from .database import init_db, get_db_session
-from .models import BatteryData
-from .data_routes import data_routes
-from .ai_query import ai_query_routes
+from database import init_db, get_db_session
+# Remove the top-level import of BatteryData
+# from models import BatteryData
+from data_routes import data_routes
+from ai_query import ai_query_routes
+from filters import filter_routes, setup_rate_limiting
 
 # Load environment variables from .env file
 load_dotenv()
@@ -72,17 +74,32 @@ def create_app(test_config=None):
     init_db(app)
     
     # Register CLI commands for database operations
-    from .init_db import register_cli_commands
-    register_cli_commands(app)
+    try:
+        from .init_db import register_cli_commands
+        register_cli_commands(app)
+    except (ImportError, AttributeError):
+        # If the import fails, try a different approach
+        try:
+            from init_db import register_cli_commands
+            register_cli_commands(app)
+        except (ImportError, AttributeError):
+            app.logger.warning("Could not register CLI commands for database operations")
     
     # Set up periodic database refresh if configured
     if app.config.get('ENABLE_AUTO_REFRESH', False):
-        from init_db import schedule_periodic_refresh
-        schedule_periodic_refresh(app)
+        try:
+            from init_db import schedule_periodic_refresh
+            schedule_periodic_refresh(app)
+        except (ImportError, AttributeError):
+            app.logger.warning("Could not set up periodic database refresh")
     
     # Register blueprints with URL prefixes
     app.register_blueprint(data_routes, url_prefix='/api')
     app.register_blueprint(ai_query_routes, url_prefix='/api')
+    app.register_blueprint(filter_routes, url_prefix='/api')
+
+    # Set up rate limiting for filter routes
+    setup_rate_limiting(app, filter_routes)
 
     # Error handling
     @app.errorhandler(404)

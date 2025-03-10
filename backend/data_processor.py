@@ -1,18 +1,17 @@
 """Ziel & Funktion:
-	•	Liest die CSV-Datei ein, bereinigt und transformiert die Daten (z. B. Entfernen von Leerzeichen, Normalisierung von Feldnamen) und bereitet sie für den Import in die Datenbank vor.
+	•	Verarbeitet CSV-Daten und importiert sie in die Datenbank.
+	•	Führt Datenbereinigung und -validierung durch.
 Abhängigkeiten:
-	•	Nutzt Funktionen aus utils.py für wiederkehrende Aufgaben und arbeitet eng mit models.py und database.py zusammen, um die Daten zu speichern.
+	•	Verwendet database.py für die Datenbankverbindung und models.py für die Tabellendefinitionen.
 """
 
 import os
-import logging
 import pandas as pd
-from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session
-
-from .utils import read_csv_file, clean_dataframe, validate_dataframe, handle_error
-from .models import BatteryData
-from .database import db_session
+import numpy as np
+import logging
+from database import db_session
+from models import BatteryData, ModelSeries
+from utils import read_csv_file, clean_dataframe, validate_dataframe, handle_error
 
 # Configure logging
 logging.basicConfig(

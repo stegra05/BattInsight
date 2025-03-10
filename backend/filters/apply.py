@@ -5,15 +5,14 @@ This module provides endpoints for applying complex filters to battery data.
 
 from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import SQLAlchemyError
-from backend.database import db_session
-from backend.models import BatteryData
+from database import db_session
 from .utils import handle_db_error, handle_general_error, validate_pagination_params
 
 # Create a Blueprint for filter application routes
 filter_apply_bp = Blueprint('filter_apply', __name__)
 
 
-@filter_apply_bp.route('/apply', methods=['POST'])
+@filter_apply_bp.route('/', methods=['POST'])
 def apply_filters():
     """Apply multiple filters to the battery data.
     
@@ -35,6 +34,9 @@ def apply_filters():
         JSON response with filtered data and pagination info
     """
     try:
+        # Import BatteryData here to avoid circular imports
+        from models import BatteryData
+        
         # Get request data
         request_data = request.get_json()
         
@@ -67,8 +69,8 @@ def apply_filters():
             query = session.query(BatteryData)
             
             # Apply filters with validation
-            query = apply_list_filters(query, filters)
-            query = apply_range_filters(query, filters)
+            query = apply_list_filters(query, filters, BatteryData)
+            query = apply_range_filters(query, filters, BatteryData)
             
             # Apply execution timeout to prevent long-running queries
             query = query.execution_options(statement_timeout=15000)
@@ -101,12 +103,13 @@ def apply_filters():
         return handle_general_error(e, "apply_filters")
 
 
-def apply_list_filters(query, filters):
+def apply_list_filters(query, filters, BatteryData):
     """Apply list-type filters to the query.
     
     Args:
         query: SQLAlchemy query object
         filters: Dictionary of filters
+        BatteryData: The BatteryData model class
         
     Returns:
         Updated query object
@@ -131,12 +134,13 @@ def apply_list_filters(query, filters):
     return query
 
 
-def apply_range_filters(query, filters):
+def apply_range_filters(query, filters, BatteryData):
     """Apply range-type filters to the query.
     
     Args:
         query: SQLAlchemy query object
         filters: Dictionary of filters
+        BatteryData: The BatteryData model class
         
     Returns:
         Updated query object

@@ -8,8 +8,9 @@ Abhängigkeiten:
 from flask import Blueprint, jsonify, request, current_app
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
-from backend.database import db_session
-from backend.models import BatteryData
+from database import db_session
+# Remove the top-level import of BatteryData
+# from models import BatteryData
 
 # Create a Blueprint for data routes
 data_routes = Blueprint('data_routes', __name__)
@@ -44,6 +45,9 @@ def get_data():
         JSON response with battery data and pagination info
     """
     try:
+        # Import BatteryData here to avoid circular imports
+        from models import BatteryData
+        
         # Get pagination parameters
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 100, type=int)
@@ -130,10 +134,10 @@ def get_data():
     
     except SQLAlchemyError as e:
         # Fix 5: Structured error logging and hiding raw DB errors
-        current_app.logger.error(f"Database error in get_data_stats: {str(e)}")
+        current_app.logger.error(f"Database error in get_data: {str(e)}")
         return jsonify({'error': 'Database operation failed'}), 500
     except Exception as e:
-        current_app.logger.error(f"Unexpected error in get_data_stats: {str(e)}")
+        current_app.logger.error(f"Unexpected error in get_data: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
 @data_routes.route('/data/stats', methods=['GET'])
@@ -144,6 +148,9 @@ def get_data_stats():
         JSON response with statistics about the data
     """
     try:
+        # Import BatteryData here to avoid circular imports
+        from models import BatteryData
+        
         with db_session() as session:
             # Get count of records
             total_records = session.query(func.count(BatteryData.id)).scalar()

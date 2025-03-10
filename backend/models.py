@@ -6,7 +6,7 @@ Abhängigkeiten:
 
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Index, CheckConstraint, Text, DateTime, func
 from sqlalchemy.orm import relationship, validates
-from .database import Base
+from database import Base
 from datetime import datetime
 
 class ModelSeries(Base):
@@ -16,14 +16,14 @@ class ModelSeries(Base):
     fields like series_name and release_year.
     """
     __tablename__ = 'model_series'
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     series_name = Column(String(50), unique=True, nullable=False)
     release_year = Column(Integer, nullable=True)
     description = Column(Text, nullable=True)
     
-    # Relationship with BatteryData
-    batteries = relationship("BatteryData", back_populates="model")
+    # Relationship with BatteryData - will be set up after BatteryData class is defined
     
     # Add versioning and timestamps
     version = Column(Integer, nullable=False, default=1)
@@ -45,7 +45,8 @@ class BatteryData(Base):
         Index('idx_val_range', 'var', 'val'),
         Index('idx_location', 'country', 'continent', 'climate'),
         CheckConstraint('val >= 0 AND val <= 1000', name='chk_val_range'),
-        CheckConstraint('cnt_vhcl > 0', name='chk_cnt_vhcl_positive')
+        CheckConstraint('cnt_vhcl > 0', name='chk_cnt_vhcl_positive'),
+        {'extend_existing': True}
     )
     
     # Primary key and basic fields
@@ -58,7 +59,6 @@ class BatteryData(Base):
     
     # Foreign key relationship for model_series
     model_series_id = Column(Integer, ForeignKey('model_series.id'), index=True)
-    model = relationship("ModelSeries", back_populates="batteries")
     
     # Keep the original model_series column for backward compatibility
     model_series = Column(Integer, nullable=True, index=True)
@@ -101,3 +101,6 @@ class BatteryData(Base):
     def __repr__(self):
         """Return a string representation of the BatteryData instance."""
         return f"<BatteryData(id={self.id}, batt_alias='{self.batt_alias}', var='{self.var}', val={self.val})>"
+
+# Set up relationships after both classes are defined
+ModelSeries.batteries = relationship("BatteryData", backref="model")

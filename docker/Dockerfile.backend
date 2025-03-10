@@ -17,6 +17,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ /app/
 COPY .env /app/
 
+# Install the application as a package in development mode
+RUN pip install -e .
+
 EXPOSE 5000
 # Ensure host is set to 0.0.0.0 to allow external connections
 CMD ["flask", "run", "--host=0.0.0.0"]
