@@ -1,39 +1,43 @@
-/* 
-Ziel & Funktion:
-	•	Die oberste React-Komponente, die den Rahmen der Anwendung bildet.
-	•	Kann Routing-Logik beinhalten und integriert andere wesentliche Komponenten (z. B. HomePage).
-Abhängigkeiten:
-	•	Importiert Komponenten wie HomePage und eventuell globale Layout-Komponenten.
-*/
-
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Box, Flex } from '@chakra-ui/react';
-import HomePage from './HomePage';
-import DashboardPage from './DashboardPage';
-import DocumentationPage from './DocumentationPage';
-import AboutPage from './AboutPage';
-import ContactPage from './ContactPage';
-import Header from './Header';
-import Footer from './Footer';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { ChakraProvider, CSSReset, Box } from '@chakra-ui/react';
+import theme from '../styles/theme';
 
+// Import common components
+import Header from './common/Header';
+import Footer from './common/Footer';
+import Loading from './common/Loading';
+
+// Import page components
+import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
+import AboutPage from './pages/AboutPage';
+import DocumentationPage from './pages/DocumentationPage';
+import ContactPage from './pages/ContactPage';
+
+/**
+ * Main App component that sets up routing and global providers
+ */
 const App = () => {
   return (
-    <Router>
-      <Flex direction="column" minH="100vh">
-        <Header />
-        <Box flex="1" px={4} py={8} maxW="1400px" mx="auto" w="100%">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/documentation" element={<DocumentationPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-          </Routes>
+    <ChakraProvider theme={theme}>
+      <CSSReset />
+      <Router>
+        <Box minHeight="100vh" display="flex" flexDirection="column">
+          <Header />
+          <Box flex="1" as="main" py={8} px={4}>
+            <Switch>
+              <Route exact path="/" component={HomePage} />
+              <Route path="/dashboard" component={DashboardPage} />
+              <Route path="/about" component={AboutPage} />
+              <Route path="/documentation" component={DocumentationPage} />
+              <Route path="/contact" component={ContactPage} />
+            </Switch>
+          </Box>
+          <Footer />
         </Box>
-        <Footer />
-      </Flex>
-    </Router>
+      </Router>
+    </ChakraProvider>
   );
 };
 

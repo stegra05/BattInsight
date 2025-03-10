@@ -1,119 +1,157 @@
-/* 
-Ziel & Funktion:
-	•	Abstrahiert alle HTTP-Anfragen an das Flask-Backend.
-	•	Bietet Funktionen zum Abrufen von Daten, Senden von Filterparametern und Übermitteln von AI-Abfragen.
-Abhängigkeiten:
-	•	Wird von den Komponenten DataVisualization.js, Filter.js und AIQuery.js verwendet.
-*/
-
 import axios from 'axios';
 
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: '/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
 /**
- * Fetch battery data with optional filters
- * @param {Object} filters - Filter parameters
- * @returns {Promise<Array>} - Array of battery data
+ * API client for communicating with the backend
  */
-export const fetchData = async (filters = {}) => {
-  try {
-    const params = new URLSearchParams();
-    
-    // Add filters to params if they exist
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value);
-      }
+class ApiClient {
+  constructor() {
+    this.baseURL = process.env.REACT_APP_API_URL || '/api';
+    this.client = axios.create({
+      baseURL: this.baseURL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
-
-    const response = await api.get('/data', { params });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    throw error;
   }
-};
 
-/**
- * Fetch filter options (countries, continents, climate, etc.)
- * @param {string} filterType - Type of filter options to fetch
- * @returns {Promise<Array>} - Array of filter options
- */
-export const fetchFilterOptions = async (filterType) => {
-  try {
-    const response = await api.get(`/filter/${filterType}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching ${filterType} options:`, error);
-    throw error;
+  // Data endpoints
+  async getData(filters = {}) {
+    try {
+      const response = await this.client.get('/data', { params: filters });
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
-};
 
-/**
- * Fetch all filter options at once
- * @returns {Promise<Object>} - Object containing all filter options
- */
-export const fetchAllFilterOptions = async () => {
-  try {
-    const response = await api.get('/filter/options');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching filter options:', error);
-    throw error;
+  async getStats() {
+    try {
+      const response = await this.client.get('/stats');
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
-};
 
-/**
- * Send AI query to process natural language into data
- * @param {string} query - Natural language query
- * @returns {Promise<Object>} - Query results
- */
-export const sendAIQuery = async (query) => {
-  try {
-    const response = await api.post('/ai-query', { query });
-    return response.data;
-  } catch (error) {
-    console.error('Error with AI query:', error);
-    throw error;
+  // Filter endpoints
+  async getFilterOptions() {
+    try {
+      const response = await this.client.get('/filter/options');
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
-};
 
-/**
- * Fetch statistics about the data
- * @returns {Promise<Object>} - Statistics object
- */
-export const fetchStats = async () => {
-  try {
-    const response = await api.get('/stats');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching stats:', error);
-    // Return default stats on error
-    return {
-      totalRecords: 0,
-      avgValue: 0,
-      countriesCount: 0,
-      modelsCount: 0
-    };
+  async getEnhancedFilterOptions() {
+    try {
+      const response = await this.client.get('/filter/enhanced-options');
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
-};
 
-/**
- * Check the health of the API
- * @returns {Promise<Object>} - Health check response
- */
-export const checkHealth = async () => {
-  try {
-    const response = await api.get('/healthcheck');
-    return response.data;
-  } catch (error) {
-    console.error('API health check failed:', error);
-    throw error;
+  async applyFilters(filters) {
+    try {
+      const response = await this.client.get('/filter/apply', { params: filters });
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
-};
+
+  async applyEnhancedFilters(filters, pagination, sort) {
+    try {
+      const response = await this.client.post('/filter/apply-enhanced', {
+        filters,
+        pagination,
+        sort,
+      });
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // AI Query endpoints
+  async submitAiQuery(query, options = {}) {
+    try {
+      const response = await this.client.post('/ai-query', {
+        query,
+        options,
+      });
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Export endpoints
+  async exportCsv(filters = {}) {
+    try {
+      // Use window.location for direct download
+      const queryParams = new URLSearchParams(filters).toString();
+      return `${this.baseURL}/export/csv?${queryParams}`;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async exportJson(filters = {}) {
+    try {
+      const queryParams = new URLSearchParams(filters).toString();
+      return `${this.baseURL}/export/json?${queryParams}`;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async exportExcel(filters = {}) {
+    try {
+      const queryParams = new URLSearchParams(filters).toString();
+      return `${this.baseURL}/export/excel?${queryParams}`;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Mapbox endpoints
+  async getCountryData(filters = {}) {
+    try {
+      const response = await this.client.get('/mapbox/country-data', { params: filters });
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async getMapboxConfig() {
+    try {
+      const response = await this.client.get('/mapbox/config');
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Error handling
+  handleError(error) {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('API Error Response:', error.response.data);
+      throw new Error(error.response.data.error || 'An error occurred with the API');
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('API No Response:', error.request);
+      throw new Error('No response from server');
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('API Request Error:', error.message);
+      throw new Error('Error setting up request');
+    }
+  }
+}
+
+export default ApiClient;
