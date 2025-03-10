@@ -1,18 +1,24 @@
 #!/bin/bash
 
+# Get the directory of the script and project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
+DOCKER_DIR="$PROJECT_ROOT/docker"
+COMPOSE_FILE="$DOCKER_DIR/docker-compose.yml"
+
 # Function to restart Docker containers
 restart_containers() {
     echo "Stopping Docker containers..."
-    docker compose -f ../docker-compose.yml down
+    docker compose -f "$COMPOSE_FILE" down
     
     echo "Building backend container..."
-    docker compose -f ../docker-compose.yml build backend
+    docker compose -f "$COMPOSE_FILE" build backend
     
     echo "Building frontend container..."
-    docker compose -f ../docker-compose.yml build frontend
+    docker compose -f "$COMPOSE_FILE" build frontend
     
     echo "Starting Docker containers..."
-    docker compose -f ../docker-compose.yml up -d
+    docker compose -f "$COMPOSE_FILE" up -d
     
     echo "Docker containers restarted successfully."
     echo "Backend available at: http://localhost:5000"
@@ -49,8 +55,8 @@ rebuild() {
     service=${1:-backend}
     
     echo "Rebuilding $service container..."
-    docker compose -f ../docker-compose.yml build $service
-    docker compose -f ../docker-compose.yml up -d $service
+    docker compose -f "$COMPOSE_FILE" build $service
+    docker compose -f "$COMPOSE_FILE" up -d $service
     
     echo "$service container rebuilt and restarted."
 }
