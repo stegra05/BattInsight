@@ -71,9 +71,23 @@ def create_app(test_config=None):
     # Initialize the database
     init_db(app)
     
+    # Register CLI commands for database operations
+    from init_db import register_cli_commands
+    register_cli_commands(app)
+    
+    # Set up periodic database refresh if configured
+    if app.config.get('ENABLE_AUTO_REFRESH', False):
+        from init_db import schedule_periodic_refresh
+        schedule_periodic_refresh(app)
+    
     # Register blueprints for API routes with correct URL prefixes
     app.register_blueprint(data_routes, url_prefix='/api/data')
+    # Verify Blueprint registration was updated from:
     app.register_blueprint(filter_routes, url_prefix='/api/filter')
+    
+    # To:
+    from filters.options import filter_options_bp
+    app.register_blueprint(filter_options_bp, url_prefix='/api/filter')
     app.register_blueprint(ai_query_routes, url_prefix='/api/ai-query')
     
     # Initialize rate limiter

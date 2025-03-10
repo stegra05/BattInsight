@@ -1,12 +1,25 @@
-# Rate limiting for filter endpoints
+"""Filter API documentation and rate limiting.
+
+This module provides OpenAPI documentation and rate limiting for filter routes.
+"""
+
+from flask import Blueprint, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-def setup_rate_limiting(app):
+# Create a Blueprint for filter documentation
+filter_docs_bp = Blueprint('filter_docs', __name__)
+
+
+def setup_rate_limiting(app, filter_routes_bp):
     """Set up rate limiting for the filter routes.
     
     Args:
         app: The Flask application instance
+        filter_routes_bp: The filter routes blueprint
+        
+    Returns:
+        Configured Limiter instance
     """
     limiter = Limiter(
         app=app,
@@ -15,12 +28,12 @@ def setup_rate_limiting(app):
     )
     
     # Apply rate limiting to filter routes
-    limiter.limit("60 per minute")(filter_routes)
+    limiter.limit("60 per minute")(filter_routes_bp)
     
     return limiter
 
-# OpenAPI documentation endpoint
-@filter_routes.route('/filter/spec', methods=['GET'])
+
+@filter_docs_bp.route('/spec', methods=['GET'])
 def get_filter_spec():
     """Get OpenAPI specification for filter endpoints.
     
@@ -114,6 +127,32 @@ def get_filter_spec():
                         },
                         "400": {
                             "description": "Invalid request format"
+                        },
+                        "500": {
+                            "description": "Server error"
+                        }
+                    }
+                }
+            },
+            "/filter/countries": {
+                "get": {
+                    "summary": "Get all available countries",
+                    "responses": {
+                        "200": {
+                            "description": "Successful response with countries"
+                        },
+                        "500": {
+                            "description": "Server error"
+                        }
+                    }
+                }
+            },
+            "/filter/continents": {
+                "get": {
+                    "summary": "Get all available continents",
+                    "responses": {
+                        "200": {
+                            "description": "Successful response with continents"
                         },
                         "500": {
                             "description": "Server error"

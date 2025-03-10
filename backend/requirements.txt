@@ -16,6 +16,9 @@ Flask-Caching==2.1.0
 # Data processing
 pandas==2.1.4
 
+# Scheduling
+APScheduler==3.10.4
+
 # AI Integration
 openai==1.12.0
 
