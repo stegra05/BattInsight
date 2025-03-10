@@ -83,11 +83,11 @@ export default function Header() {
           spacing={6}
         >
           <Button
-            as={'a'}
+            as={RouterLink}
+            to="/documentation"
             fontSize={'sm'}
             fontWeight={600}
             variant={'solid'}
-            href={'#'}
             bg="brand.500"
             color="white"
             _hover={{
@@ -268,8 +268,12 @@ const MobileNavItem = ({ label, children, href }) => {
 
 const NAV_ITEMS = [
   {
-    label: 'Dashboard',
+    label: 'Home',
     href: '/',
+  },
+  {
+    label: 'Dashboard',
+    href: '/dashboard',
   },
   {
     label: 'Data Explorer',
@@ -282,5 +286,9 @@ const NAV_ITEMS = [
   {
     label: 'About',
     href: '/about',
+  },
+  {
+    label: 'Contact',
+    href: '/contact',
   },
 ]; 

@@ -10,6 +10,10 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Box, Flex } from '@chakra-ui/react';
 import HomePage from './HomePage';
+import DashboardPage from './DashboardPage';
+import DocumentationPage from './DocumentationPage';
+import AboutPage from './AboutPage';
+import ContactPage from './ContactPage';
 import Header from './Header';
 import Footer from './Footer';
 
@@ -21,7 +25,10 @@ const App = () => {
         <Box flex="1" px={4} py={8} maxW="1400px" mx="auto" w="100%">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            {/* Add more routes as needed */}
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/documentation" element={<DocumentationPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
           </Routes>
         </Box>
         <Footer />

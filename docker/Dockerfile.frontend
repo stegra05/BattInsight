@@ -3,6 +3,13 @@ FROM node:16-alpine as build
 
 WORKDIR /app
 
+# Set environment variables for React build
+ARG REACT_APP_API_URL
+ARG REACT_APP_MAPBOX_TOKEN
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+ENV REACT_APP_MAPBOX_TOKEN=${REACT_APP_MAPBOX_TOKEN}
+ENV NODE_ENV=production
+
 # Copy package files first for better caching
 COPY frontend/package.json frontend/package-lock.json* ./
 
@@ -11,9 +18,6 @@ RUN npm ci
 
 # Copy the rest of the frontend code
 COPY frontend/ ./
-
-# Set the environment variable for React build
-ENV NODE_ENV=production
 
 # Build the app
 RUN npm run build

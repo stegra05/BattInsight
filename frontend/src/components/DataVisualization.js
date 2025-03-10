@@ -28,9 +28,11 @@ import {
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Note: In a production app, you should use environment variables for the token
-// This is just for demonstration purposes
-mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN_HERE';
+// Get Mapbox token from environment variables
+// In development, use the REACT_APP_ prefix (defined in .env)
+// In production, this should be injected at build time or via container environment
+const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN || 'YOUR_MAPBOX_TOKEN_HERE';
+mapboxgl.accessToken = MAPBOX_TOKEN;
 
 const DataVisualization = ({ data, isLoading, error }) => {
   const [viewMode, setViewMode] = useState('map'); // 'map' or 'table'

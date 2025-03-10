@@ -207,6 +207,33 @@ battinsight/
 └── ...
 ```
 
+### Umgebungskonfiguration
+
+Die Anwendung nutzt eine `.env`-Datei für Umgebungsvariablen. Um die Umgebung einzurichten:
+
+1. Führen Sie das Setup-Skript aus:
+   ```bash
+   ./setup_env.sh
+   ```
+   
+2. Oder kopieren Sie die Beispieldatei manuell:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Bearbeiten Sie die `.env`-Datei und setzen Sie folgende wichtige Variablen:
+   - `OPENAI_API_KEY`: Erforderlich für AI-Abfragen
+   - `MAPBOX_ACCESS_TOKEN`: Erforderlich für Kartenvisualisierung
+   - `SECRET_KEY`: Ein sicherer zufälliger String für die Produktion
+   - Datenbankkonfiguration je nach Umgebung
+
+Die vollständige Konfiguration umfasst:
+
+- **Datenbank**: Verbindungsparameter für PostgreSQL
+- **API-Schlüssel**: OpenAI und Mapbox-Zugangsdaten
+- **Anwendungseinstellungen**: Umgebung, Debug-Modus, Logging
+- **Docker-Konfiguration**: Projekt- und Containernamen
+
 ### Installation
 
 1. Klonen Sie das Repository:
@@ -222,11 +249,7 @@ battinsight/
    pip install -e .
    ```
 
-3. Konfigurieren Sie die Umgebungsvariablen:
-   Kopieren Sie die `.env.example`-Datei zu `.env` und passen Sie die Werte an:
-   ```bash
-   cp .env.example .env
-   ```
+3. Konfigurieren Sie die Umgebungsvariablen (siehe Abschnitt oben).
 
 ### Starten mit Docker
 
