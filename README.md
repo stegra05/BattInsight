@@ -171,48 +171,103 @@ Zusätzlich wird ein AI-Feature integriert, das es dem Benutzer ermöglicht, üb
 ## Installation & Nutzung
 
 ### Voraussetzungen
-- **Python 3.x**
-- **Node.js & npm**
-- **Docker** (optional, empfohlen für ein konsistentes Deployment)
 
-### Setup
+- Python 3.8+
+- Node.js 14+
+- Docker und Docker Compose
+- PostgreSQL (oder über Docker)
 
-1. **Backend installieren:**
-   - Navigiere in das Backend-Verzeichnis:
-     ```sh
-     cd backend
-     ```
-   - Installiere die benötigten Python-Abhängigkeiten:
-     ```sh
-     pip install -r requirements.txt
-     ```
-   - Starte das Flask-Backend:
-     ```sh
-     python app.py
-     ```
+### Projektstruktur
 
-2. **Frontend installieren:**
-   - Navigiere in das Frontend-Verzeichnis:
-     ```sh
-     cd frontend
-     ```
-   - Installiere die benötigten Node.js-Abhängigkeiten:
-     ```sh
-     npm install
-     ```
-   - Starte das React-Frontend:
-     ```sh
-     npm start
-     ```
+Das Projekt ist in folgende Hauptverzeichnisse organisiert:
 
-3. **Datenbank initialisieren:**
-   - Führe das Initialisierungsskript aus, um die CSV-Daten in die PostgreSQL-Datenbank zu importieren:
-     ```sh
-     python init_db.py
-     ```
+```
+battinsight/
+├── backend/             # Python Flask Backend
+│   ├── filters/         # Filter-Funktionalitäten
+│   ├── logs/            # Log-Dateien
+│   ├── tests/           # Backend-Tests
+│   ├── app.py           # Hauptanwendung
+│   ├── database.py      # Datenbankverbindung
+│   ├── models.py        # Datenmodelle
+│   └── ...
+├── frontend/            # React Frontend
+│   ├── public/          # Statische Dateien
+│   ├── src/             # Quellcode
+│   │   ├── components/  # React-Komponenten
+│   │   ├── api/         # API-Clients
+│   │   └── styles/      # CSS-Dateien
+│   └── tests/           # Frontend-Tests
+├── docker/              # Docker-Konfiguration
+│   ├── scripts/         # Docker-Hilfsskripte
+│   ├── Dockerfile.backend
+│   ├── Dockerfile.frontend
+│   └── docker-compose.yml
+├── data/                # Datendateien (CSV)
+└── ...
+```
 
-4. **Zugriff auf die Anwendung:**
-   - Die Anwendung ist dann unter [http://localhost:3000](http://localhost:3000) erreichbar.
+### Installation
+
+1. Klonen Sie das Repository:
+   ```bash
+   git clone https://github.com/yourusername/battinsight.git
+   cd battinsight
+   ```
+
+2. Erstellen Sie eine virtuelle Umgebung und installieren Sie die Abhängigkeiten:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # Unter Windows: .venv\Scripts\activate
+   pip install -e .
+   ```
+
+3. Konfigurieren Sie die Umgebungsvariablen:
+   Kopieren Sie die `.env.example`-Datei zu `.env` und passen Sie die Werte an:
+   ```bash
+   cp .env.example .env
+   ```
+
+### Starten mit Docker
+
+1. Starten Sie die Docker-Container:
+   ```bash
+   ./docker/scripts/docker_utils.sh restart
+   ```
+
+2. Überprüfen Sie den Status der Container:
+   ```bash
+   ./docker/scripts/docker_utils.sh status
+   ```
+
+3. Sehen Sie sich die Logs an:
+   ```bash
+   ./docker/scripts/docker_utils.sh logs
+   ```
+
+### Lokale Entwicklung
+
+1. Starten Sie das Backend:
+   ```bash
+   cd backend
+   flask run
+   ```
+
+2. Starten Sie das Frontend in einem separaten Terminal:
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
+
+3. Öffnen Sie http://localhost:3000 in Ihrem Browser.
+
+### Tests ausführen
+
+```bash
+cd backend
+pytest
+```
 
 ---
 

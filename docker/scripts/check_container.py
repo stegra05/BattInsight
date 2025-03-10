@@ -12,11 +12,15 @@ def run_command(command):
         print(e.stderr)
         return None
 
-print("Checking Docker containers...")
-run_command("docker ps")
+def check_containers():
+    print("Checking Docker containers...")
+    run_command("docker ps")
 
-print("\nChecking if port 5000 is open...")
-run_command("docker exec docker-backend-1 netstat -tuln | grep 5000")
+    print("\nChecking if port 5000 is open...")
+    run_command("docker exec docker-backend-1 netstat -tuln | grep 5000")
 
-print("\nChecking logs of backend container...")
-run_command("docker logs docker-backend-1 | tail -n 20") 
+    print("\nChecking logs of backend container...")
+    run_command("docker logs docker-backend-1 | tail -n 20")
+
+if __name__ == "__main__":
+    check_containers() 
