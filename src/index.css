@@ -1,0 +1,556 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    
+    /* Light mode colors */
+    --light-bg-primary: 210 40% 98%;
+    --light-bg-secondary: 220 14% 96%;
+    --light-foreground: 222.2 47.4% 11.2%;
+    --light-card: 0 0% 100%;
+    --light-card-foreground: 222.2 47.4% 11.2%;
+    --light-border: 214.3 31.8% 91.4%;
+    --light-input: 214.3 31.8% 91.4%;
+    --light-ring: 222.2 47.4% 11.2%;
+    --light-primary: 222.2 47.4% 11.2%;
+    --light-primary-foreground: 210 40% 98%;
+    --light-secondary: 210 40% 96.1%;
+    --light-secondary-foreground: 222.2 47.4% 11.2%;
+    --light-accent: 210 40% 96.1%;
+    --light-accent-foreground: 222.2 47.4% 11.2%;
+    --light-muted: 210 40% 96.1%;
+    --light-muted-foreground: 215.4 16.3% 46.9%;
+    --light-destructive: 0 84.2% 60.2%;
+    --light-destructive-foreground: 210 40% 98%;
+    
+    /* Dark mode colors - will be applied with the .dark class */
+    --dark-bg-primary: 222.2 84% 4.9%;
+    --dark-bg-secondary: 217.2 32.6% 12%;
+    --dark-foreground: 210 40% 98%;
+    --dark-card: 222.2 84% 4.9%;
+    --dark-card-foreground: 210 40% 98%;
+    --dark-border: 217.2 32.6% 17.5%;
+    --dark-input: 217.2 32.6% 17.5%;
+    --dark-ring: 212.7 26.8% 83.9%;
+    --dark-primary: 210 40% 98%;
+    --dark-primary-foreground: 222.2 47.4% 11.2%;
+    --dark-secondary: 217.2 32.6% 17.5%;
+    --dark-secondary-foreground: 210 40% 98%;
+    --dark-accent: 217.2 32.6% 17.5%;
+    --dark-accent-foreground: 210 40% 98%;
+    --dark-muted: 217.2 32.6% 17.5%;
+    --dark-muted-foreground: 215 20.2% 65.1%;
+    --dark-destructive: 0 62.8% 30.6%;
+    --dark-destructive-foreground: 210 40% 98%;
+
+    --radius: 0.5rem;
+
+    /* Default theme color variables (will be updated by JS) */
+    --color-primary: 59 130 246; /* blue-500 */
+    --color-secondary: 99 102 241; /* indigo-500 */
+    --color-accent: rgb(96, 165, 250);
+    --color-success: 34 197 94; /* green-500 */
+    --color-danger: 239 68 68; /* red-500 */
+    --color-warning: 234 179 8; /* yellow-500 */
+    --color-info: 6 182 212; /* cyan-500 */
+    
+    /* Sidebar variables */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 10% 3.9%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 240 5.9% 90%;
+    --sidebar-ring: 240 10% 3.9%;
+  }
+
+  .dark {
+    --bg-primary: var(--dark-bg-primary);
+    --bg-secondary: var(--dark-bg-secondary);
+    --foreground: var(--dark-foreground);
+    --card: var(--dark-card);
+    --card-foreground: var(--dark-card-foreground);
+    --border: var(--dark-border);
+    --input: var(--dark-input);
+    --ring: var(--dark-ring);
+    --primary: var(--dark-primary);
+    --primary-foreground: var(--dark-primary-foreground);
+    --secondary: var(--dark-secondary);
+    --secondary-foreground: var(--dark-secondary-foreground);
+    --destructive: var(--dark-destructive);
+    --destructive-foreground: var(--dark-destructive-foreground);
+    --muted: var(--dark-muted);
+    --muted-foreground: var(--dark-muted-foreground);
+    --accent: var(--dark-accent);
+    --accent-foreground: var(--dark-accent-foreground);
+
+    /* Sidebar dark theme */
+    --sidebar-background: 240 10% 3.9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 240 4.9% 83.9%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-family: var(--font-sans);
+    background-color: hsl(var(--bg-primary));
+    color: hsl(var(--foreground));
+  }
+
+  body {
+    @apply antialiased text-gray-800 dark:text-gray-200;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    @apply bg-gray-50 dark:bg-gray-900;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Better focus styles for keyboard navigation */
+  a:focus-visible,
+  button:focus-visible {
+    @apply outline-none ring-2 ring-blue-500 dark:ring-blue-400 ring-offset-2 dark:ring-offset-gray-800;
+  }
+
+  /* Add these button classes */
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors;
+  }
+  
+  .btn-outline {
+    @apply px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors;
+  }
+  
+  .btn-danger {
+    @apply px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors;
+  }
+  
+  .btn-success {
+    @apply px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 transition-all duration-300;
+  }
+  
+  .card:hover {
+    @apply shadow-lg transform -translate-y-1;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400;
+  }
+  
+  .card-header {
+    @apply border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 px-6 py-4;
+  }
+  
+  .card-body {
+    @apply p-6;
+  }
+  
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full;
+  }
+  
+  .badge-primary {
+    @apply bg-primary text-white;
+  }
+  
+  .badge-secondary {
+    @apply bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200;
+  }
+  
+  .badge-blue {
+    @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300;
+  }
+  
+  .badge-green {
+    @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300;
+  }
+  
+  .badge-red {
+    @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300;
+  }
+  
+  .badge-yellow {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300;
+  }
+  
+  .badge-purple {
+    @apply bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300;
+  }
+  
+  /* Tooltips */
+  .tooltip {
+    @apply relative inline-block;
+  }
+  
+  .tooltip-text {
+    @apply absolute z-50 px-3 py-2 text-xs font-medium text-white bg-gray-800 dark:bg-gray-700 rounded-lg shadow-sm opacity-0 invisible -translate-y-1 transition-all duration-300 whitespace-nowrap;
+  }
+  
+  .tooltip:hover .tooltip-text {
+    @apply opacity-100 visible translate-y-0;
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInRight 0.5s ease-in-out;
+  }
+  
+  .animate-slide-in-left {
+    animation: slideInLeft 0.5s ease-in-out;
+  }
+  
+  .animate-slide-in-up {
+    animation: slideInUp 0.5s ease-in-out;
+  }
+  
+  .animate-slide-in-down {
+    animation: slideInDown 0.5s ease-in-out;
+  }
+  
+  /* Tables */
+  .table-container {
+    @apply overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700;
+  }
+  
+  .table {
+    @apply min-w-full divide-y divide-gray-200 dark:divide-gray-700;
+  }
+  
+  .table-header {
+    @apply bg-gray-50 dark:bg-gray-800;
+  }
+  
+  .table-header-cell {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider;
+  }
+  
+  .table-body {
+    @apply bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800;
+  }
+  
+  .table-row {
+    @apply hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors;
+  }
+  
+  .table-cell {
+    @apply px-6 py-4 text-sm text-gray-900 dark:text-gray-200;
+  }
+  
+  /* Data display */
+  .stat-card {
+    @apply rounded-lg p-4 flex items-center space-x-4;
+  }
+  
+  .stat-icon {
+    @apply flex-shrink-0 rounded-md p-2.5 text-white;
+  }
+  
+  .stat-title {
+    @apply text-sm font-medium;
+  }
+  
+  .stat-value {
+    @apply text-2xl font-semibold;
+  }
+  
+  /* Charts and data visualization */
+  .chart-container {
+    @apply bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700 p-2;
+  }
+  
+  /* Map specific styles */
+  .map-controls {
+    @apply absolute right-4 top-4 z-10 bg-white dark:bg-gray-800 rounded-lg shadow p-2 flex flex-col space-y-2 border border-gray-100 dark:border-gray-700;
+  }
+  
+  .map-control-button {
+    @apply p-1.5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors;
+  }
+  
+  /* Toggle switches */
+  .toggle {
+    @apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+  }
+  
+  .toggle-bg-off {
+    @apply bg-gray-200 dark:bg-gray-700;
+  }
+  
+  .toggle-bg-on {
+    @apply bg-blue-600 dark:bg-blue-500;
+  }
+  
+  .toggle-dot {
+    @apply inline-block h-4 w-4 rounded-full bg-white transition-transform;
+  }
+  
+  .toggle-dot-off {
+    @apply translate-x-1;
+  }
+  
+  .toggle-dot-on {
+    @apply translate-x-6;
+  }
+}
+
+* {
+  @apply border-gray-200 dark:border-gray-700;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-gray-400 dark:hover:bg-gray-500;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  @apply outline-none ring-2 ring-primary ring-opacity-50;
+}
+
+/* Improved card transitions */
+.card {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Toast container */
+.toast-container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 24rem;
+  pointer-events: none;
+}
+
+.toast-container > * {
+  pointer-events: auto;
+}
+
+/* Theme-specific styles that can't be handled by Tailwind classes */
+.theme-blue .btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.theme-green .btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.theme-purple .btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.theme-amber .btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.theme-rose .btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Utility classes for improved readability */
+@layer utilities {
+  .text-shadow {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .transition-smooth {
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Styling for leaflet map components */
+.leaflet-container {
+  height: 400px;
+  width: 100%;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.info {
+  padding: 6px 8px;
+  font: 14px/16px Arial, Helvetica, sans-serif;
+  background: white;
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  border-radius: 5px;
+}
+
+.info.legend {
+  line-height: 18px;
+  color: #555;
+}
+
+.info.legend h4 {
+  margin: 0 0 5px;
+  color: #777;
+}
+
+.info.data-info {
+  min-width: 150px;
+}
+
+.legend .color-box {
+  width: 18px;
+  height: 18px;
+  float: left;
+  margin-right: 8px;
+  opacity: 0.7;
+  border-radius: 3px;
+}
+
+.legend-item {
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+}
+
+/* Dark mode adjustment for Leaflet */
+.dark .leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+.dark .leaflet-control {
+  filter: invert(1) hue-rotate(200deg);
+}
+
+.dark .leaflet-control a {
+  color: black;
+}
+
+.dark .info {
+  background: rgba(40, 44, 52, 0.8);
+  color: #f1f1f1;
+}
+
+.dark .info.legend {
+  color: #ccc;
+}
+
+.dark .info.legend h4 {
+  color: #bbb;
+}
+
+/* Loading animations */
+.loading-spinner {
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+} 
