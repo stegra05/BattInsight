@@ -32,6 +32,20 @@ function App() {
   // Toast notifications
   const { showToast } = useToast();
   
+  // Extra state for filter options
+  const [uniqueCountries, setUniqueCountries] = useState<string[]>([]);
+  const [uniqueContinents, setUniqueContinents] = useState<string[]>([]);
+  const [uniqueClimates, setUniqueClimates] = useState<string[]>([]);
+
+  // Extract unique values for filters when data loads
+  useEffect(() => {
+    if (allData && allData.length > 0) {
+      setUniqueCountries([...new Set(allData.map(item => item.country))].sort());
+      setUniqueContinents([...new Set(allData.map(item => item.continent))].sort());
+      setUniqueClimates([...new Set(allData.map(item => item.climate))].sort());
+    }
+  }, [allData]);
+  
   // Update filtered data when all data changes
   useEffect(() => {
     if (allData && allData.length > 0) {
@@ -191,10 +205,9 @@ function App() {
             >
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-blue-200 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
-                    <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
-                    <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div>
@@ -210,7 +223,7 @@ function App() {
             >
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-green-200 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -227,7 +240,7 @@ function App() {
             >
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-amber-200 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 mr-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -244,8 +257,8 @@ function App() {
             >
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-purple-200 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 mr-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
                   </svg>
                 </div>
                 <div>
@@ -280,6 +293,21 @@ function App() {
             </div>
           )}
         </Card>
+        
+        {/* Filter panel */}
+        <DataFilters
+          countries={uniqueCountries}
+          continents={uniqueContinents}
+          climates={uniqueClimates}
+          onCountryChange={handleCountryChange}
+          onContinentChange={handleContinentChange}
+          onClimateChange={handleClimateChange}
+          onValueRangeChange={(min, max) => {
+            const filtered = allData.filter(point => point.value >= min && point.value <= max);
+            setFilteredData(filtered);
+            showToast(`Filtered to ${filtered.length} data points`, 'info');
+          }}
+        />
         
         {/* Main content */}
         {loading ? (
