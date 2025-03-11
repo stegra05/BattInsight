@@ -10,6 +10,8 @@ import useNaturalLanguageQuery from './hooks/useNaturalLanguageQuery';
 import useDataAnalysis from './hooks/useDataAnalysis';
 import { useToast } from './hooks/useToast';
 import { DataPoint } from './services/DataService';
+import Card from './components/ui/Card';
+import Button from './components/ui/Button';
 
 function App() {
   // Load data
@@ -71,11 +73,15 @@ function App() {
   // Show query error toast
   useEffect(() => {
     if (queryError) {
-      showToast(`Query error: ${queryError}`, 'error');
+      // Handle different error types safely
+      const errorMessage = typeof queryError === 'string' 
+        ? queryError 
+        : (queryError as any).message || 'Query error occurred';
+      showToast(errorMessage, 'error');
     }
-  }, [queryError, showToast]);
+  }, [queryError]);
 
-  // Debug output for data analysis
+  // Show analysis complete toast
   useEffect(() => {
     if (analysis && !loading) {
       console.log('Data analysis:', analysis);
@@ -140,71 +146,124 @@ function App() {
     if (climates.length === 0) {
       setFilteredData(allData);
     } else {
-      const filtered = allData.filter(point => climates.includes(point.climate));
+      const filtered = allData.filter(point => point.climate && climates.includes(point.climate));
       setFilteredData(filtered);
       showToast(`Filtered to ${filtered.length} data points`, 'info');
     }
   }, [allData, showToast]);
   
-  // Handle value range filter change
-  const handleValueRangeChange = useCallback((min: number, max: number) => {
-    const filtered = allData.filter(point => point.value >= min && point.value <= max);
-    setFilteredData(filtered);
-    showToast(`Filtered to ${filtered.length} data points`, 'info');
-  }, [allData, showToast]);
-  
-  // Get unique countries, continents, and climates from data
-  const countries = [...new Set(allData.map(point => point.country))].filter(Boolean);
-  const continents = [...new Set(allData.map(point => point.continent))].filter(Boolean);
-  const climates = [...new Set(allData.map(point => point.climate))].filter(Boolean);
-
   return (
     <MainLayout>
-      <div className="space-y-6">
-        {/* Header section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Data Visualization Dashboard</h1>
-              <p className="text-gray-600 dark:text-gray-400">Interactive analysis of location-based data</p>
-            </div>
-            <button 
-              className="btn-primary"
-              onClick={() => {
-                refreshData();
-                showToast('Refreshing data...', 'info');
-              }}
-            >
-              Refresh Data
-            </button>
+      <div className="flex flex-col space-y-6">
+        {/* Header with summary and refresh button */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+              Data Analysis Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Explore and analyze global battery data
+            </p>
           </div>
-          
-          {/* Stats summary */}
-          {!loading && !error && stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                <div className="text-sm text-blue-800 dark:text-blue-300">Total Data Points</div>
-                <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</div>
-              </div>
-              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                <div className="text-sm text-green-800 dark:text-green-300">Average Value</div>
-                <div className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.avgValue}</div>
-              </div>
-              <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
-                <div className="text-sm text-amber-800 dark:text-amber-300">Countries</div>
-                <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">{stats.countries}</div>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                <div className="text-sm text-purple-800 dark:text-purple-300">Continents</div>
-                <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.continents}</div>
-              </div>
-            </div>
-          )}
+          <Button
+            variant="primary"
+            onClick={() => {
+              refreshData();
+              showToast('Refreshing data...', 'info');
+            }}
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            }
+            isLoading={loading}
+          >
+            {loading ? 'Refreshing...' : 'Refresh Data'}
+          </Button>
         </div>
+          
+        {/* Stats summary */}
+        {!loading && !error && stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+            <Card 
+              className="transform transition-transform hover:scale-105 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4"
+              borderless
+            >
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-blue-200 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
+                    <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
+                    <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm text-blue-800 dark:text-blue-300 font-medium">Total Data Points</div>
+                  <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</div>
+                </div>
+              </div>
+            </Card>
+            
+            <Card 
+              className="transform transition-transform hover:scale-105 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4"
+              borderless
+            >
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-green-200 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm text-green-800 dark:text-green-300 font-medium">Average Value</div>
+                  <div className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.avgValue}</div>
+                </div>
+              </div>
+            </Card>
+            
+            <Card 
+              className="transform transition-transform hover:scale-105 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-4"
+              borderless
+            >
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-amber-200 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm text-amber-800 dark:text-amber-300 font-medium">Countries</div>
+                  <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">{stats.countries}</div>
+                </div>
+              </div>
+            </Card>
+            
+            <Card 
+              className="transform transition-transform hover:scale-105 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4"
+              borderless
+            >
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-purple-200 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm text-purple-800 dark:text-purple-300 font-medium">Continents</div>
+                  <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.continents}</div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
         
         {/* Search panel */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">Search & Filter</h2>
+        <Card
+          title="Search & Filter"
+          subtitle="Use natural language to search and analyze the data"
+          className="animate-fade-in"
+          contentClassName="p-6"
+        >
           <NaturalLanguageSearch
             onSearch={handleSearch}
             isProcessing={isProcessing}
@@ -220,49 +279,63 @@ function App() {
               </p>
             </div>
           )}
-        </div>
+        </Card>
         
         {/* Main content */}
         {loading ? (
           <LoadingState message="Loading data visualization..." />
         ) : error ? (
-          <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-2">Error Loading Data</h3>
-            <p>{error.message}</p>
-            <button className="mt-4 btn-primary" onClick={() => refreshData()}>
-              Try Again
-            </button>
-          </div>
+          <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-2 text-red-700 dark:text-red-300">Error Loading Data</h3>
+              <p className="text-red-600 dark:text-red-400">{error.message}</p>
+              <Button 
+                variant="primary" 
+                className="mt-4" 
+                onClick={() => refreshData()}
+              >
+                Try Again
+              </Button>
+            </div>
+          </Card>
         ) : filteredData.length === 0 ? (
-          <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-700 text-yellow-800 dark:text-yellow-300 p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
-            <p>There are no data points to visualize. Please check your data source.</p>
-          </div>
+          <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-2 text-amber-700 dark:text-amber-300">No Data Available</h3>
+              <p className="text-amber-600 dark:text-amber-400">There are no data points to visualize. Please check your data source.</p>
+            </div>
+          </Card>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
             {/* Data charts */}
-            <DataChart 
-              data={filteredData}
-              type="bar"
-              loading={loading}
-              title="Data by Country"
-              description="Bar chart showing distribution by country"
-            />
+            <div className="transform transition-all duration-500 hover:scale-[1.02]">
+              <DataChart 
+                data={filteredData}
+                type="bar"
+                loading={loading}
+                title="Data by Country"
+                description="Bar chart showing distribution by country"
+              />
+            </div>
             
-            <DataChart 
-              data={filteredData}
-              type="pie"
-              loading={loading}
-              title="Continent Distribution"
-              description="Distribution of data across continents"
-            />
+            <div className="transform transition-all duration-500 hover:scale-[1.02]">
+              <DataChart 
+                data={filteredData}
+                type="pie"
+                loading={loading}
+                title="Continent Distribution"
+                description="Distribution of data across continents"
+              />
+            </div>
             
             {/* Map visualization */}
-            <div className="lg:col-span-2">
-              <MapVisualization 
-                data={filteredData}
-                loading={loading}
-              />
+            <div className="lg:col-span-2 transform transition-all duration-500 hover:scale-[1.01]">
+              <Card title="Global Distribution" subtitle="Geographical distribution of data points">
+                <MapVisualization 
+                  data={filteredData}
+                  loading={loading}
+                />
+              </Card>
             </div>
           </div>
         )}
